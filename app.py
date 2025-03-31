@@ -16,7 +16,12 @@ CORS(app)
 
 # === 1. CONNESSIONE GOOGLE SHEETS ===
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+
+import json
+
+credentials_dict = json.loads(os.environ['GOOGLE_APPLICATION_CREDENTIALS_JSON'])
+creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scope)
+
 client = gspread.authorize(creds)
 
 # === 2. CONNESSIONE GOOGLE DRIVE ===

@@ -15,14 +15,17 @@ app.secret_key = 'supersegreto123'
 CORS(app)
 
 # === 1. CONNESSIONE GOOGLE SHEETS ===
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+scope = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive"
+]
 
-import json
-
+# Carica le credenziali dal contenuto JSON salvato come variabile d’ambiente
 credentials_dict = json.loads(os.environ['GOOGLE_APPLICATION_CREDENTIALS_JSON'])
 creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scope)
 
 client = gspread.authorize(creds)
+
 
 # === 2. CONNESSIONE GOOGLE DRIVE ===
 drive_creds = service_account.Credentials.from_service_account_file(

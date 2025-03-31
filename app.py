@@ -29,8 +29,9 @@ client = gspread.authorize(creds)
 
 
 # === 2. CONNESSIONE GOOGLE DRIVE ===
-drive_creds = service_account.Credentials.from_service_account_file(
-    'credentials.json', scopes=['https://www.googleapis.com/auth/drive']
+drive_credentials_dict = json.loads(os.environ['GOOGLE_APPLICATION_CREDENTIALS_JSON'])
+drive_creds = service_account.Credentials.from_service_account_info(
+    drive_credentials_dict, scopes=['https://www.googleapis.com/auth/drive']
 )
 drive_service = build('drive', 'v3', credentials=drive_creds)
 

@@ -79,8 +79,10 @@ function caricaClienti() {
             if (data.length > 0) {
                 document.getElementById("nome-agente").textContent = data[0].Agente || "Agente";
             }
+
             const tbody = document.getElementById('clienti-body');
             tbody.innerHTML = '';
+
             data.forEach(cliente => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -92,8 +94,8 @@ function caricaClienti() {
                   <td>${cliente.Stato}</td>
                   <td>${cliente.Provvigione}</td>
                   <td>
-                    <span class="mini-btn" onclick="mostraInterazioni('${cliente.ID_Cliente}')">📋 Interazioni</span>
-                    <span class="mini-btn" onclick="mostraDocumenti('${cliente.ID_Cliente}')">📎 Documenti</span>
+                      <span class="mini-btn" onclick="mostraInterazioni('${cliente.ID_Cliente}')">📋 Interazioni</span>
+                      <span class="mini-btn" id="doc-btn-${cliente.ID_Cliente}" onclick="mostraDocumenti('${cliente.ID_Cliente}')">📎 Documenti</span>
                   </td>
                 `;
                 tbody.appendChild(tr);
@@ -104,6 +106,9 @@ function caricaClienti() {
                 extraCell.innerHTML = `<div id="extra-${cliente.ID_Cliente}"></div>`;
                 extraRow.appendChild(extraCell);
                 tbody.appendChild(extraRow);
+
+                // ✅ Chiamata alla funzione dopo aver aggiunto il bottone
+                verificaNotificaDocumenti(cliente.ID_Cliente);
             });
         });
 }
@@ -267,6 +272,7 @@ function mostraDocumenti(idCliente) {
         <div id="lista-documenti-${idCliente}"></div>
       </div>
     `;
+    fetch(`/files/segna-letti/${idCliente}`, { method: "POST" });
     caricaDocumenti(idCliente);
 }
 
@@ -385,6 +391,20 @@ window.addEventListener('DOMContentLoaded', () => {
     caricaClienti();
     caricaStatiCliente();
 });
+
+// =========================== verificaNotificaDocumenti ===========================
+function verificaNotificaDocumenti(idCliente) {
+  fetch(`/files/${idCliente}`)
+    .then(res => res.json())
+    .then(files => {
+      const ciSonoFileAdminNonLetti = files.some(f => f.caricato_da === "ADMIN" && f.letto_da_agente === "FALSE");
+      if (ciSonoFileAdminNonLetti) {
+        const btn = document.getElementById(`doc-btn-${idCliente}`);
+        btn.innerHTML += ' <span style="color:red;">📥</span>';
+      }
+    });
+}
+
 </script>
 </body>
 </html>

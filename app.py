@@ -243,6 +243,16 @@ def upload_file(id_cliente):
         print("⚠️ Impossibile eliminare il file temporaneo:", e)
 
     file_id = uploaded.get("id")
+
+    # 🔓 Rendi il file visibile pubblicamente
+    drive_service.permissions().create(
+        fileId=file_id,
+        body={
+            "role": "reader",
+            "type": "anyone"
+        }
+    ).execute()
+
     # Log su File_Allegati
     try:
         print("✅ Registro file:", file_id, id_cliente, filename, codice_agente, data_oggi)

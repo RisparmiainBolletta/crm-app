@@ -250,9 +250,11 @@ def upload_file(id_cliente):
         fileId=file_id,
         body={
             "role": "reader",
-            "type": "anyone"
+            "type": "anyone",
+            "allowFileDiscovery": False
         }
     ).execute()
+
 
     # Pulizia file temporaneo
     try:
@@ -306,7 +308,7 @@ def get_files(id_cliente):
         file_links.append({
             'name': f['name'],
             'id': f['id'],
-            'url': f"https://drive.google.com/file/d/{f['id']}/view?usp=sharing",
+            'url': f"https://drive.google.com/uc?export=view&id={f['id']}"
             'stato': stato
         })
 

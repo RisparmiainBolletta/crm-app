@@ -295,15 +295,27 @@ function caricaDocumenti(idCliente) {
         }
         let html = "<ul>";
         data.forEach(doc => {
+            const ext = doc.name.split('.').pop().toLowerCase();
             const stato = doc.stato === "Approvato" ? "✅" : "⏳";
             const colore = doc.stato === "Approvato" ? "approvato" : "in-attesa";
-            html += `<li>
+
+            let preview = "";
+
+            if (["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(ext)) {
+                preview = `<br><img src="${doc.url}" alt="${doc.name}" style="max-width: 200px; border:1px solid #ccc; margin-top:5px;">`;
+            } else if (ext === "pdf") {
+                preview = `<br><iframe src="https://drive.google.com/file/d/${doc.id}/preview" width="100%" height="300px" style="border:1px solid #ccc;"></iframe>`;
+            }
+
+            html += `<li style="margin-bottom: 20px;">
                 <a href="${doc.url}" target="_blank">${doc.name}</a>
                 <span class="${colore}"> ${stato} ${doc.stato}</span>
                 ${doc.stato !== "Approvato" ? `<button onclick="eliminaFile('${doc.id}', '${idCliente}')">🗑</button>` : ""}
+                ${preview}
             </li>`;
         });
         html += "</ul>";
+
         container.innerHTML = html;
     });
 }

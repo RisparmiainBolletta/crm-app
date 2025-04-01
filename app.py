@@ -335,6 +335,99 @@ def delete_file(file_id):
         return jsonify({"message": "Errore durante l'eliminazione", "error": str(e)}), 500
 
 # -------------------------------------------------------------------
+#  D1) UPLOAD FILE DA ADMIN
+# -------------------------------------------------------------------
+# Visualizza pagina Admin upload
+@app.route("/admin-upload")
+def pagina_admin_upload():
+    return send_from_directory(app.static_folder, "admin_upload.html")
+
+
+# Ritorna tutti i clienti (visibili all’admin)
+@app.route("/clienti-admin")
+def get_clienti_admin():
+    records = clienti_sheet.get_all_records()
+    return jsonify(records)
+
+
+# Admin carica un file
+@app.route("/admin-upload/<id_cliente>", methods=["POST"])
+def admin_upload_file(id_cliente):
+    if 'file' not in request.files:
+        return jsonify({"message": "Nessun file ricevuto"}), 400
+
+    file = request.files['file']
+    filename = file.filename
+    data_oggi = datetime.today().strftime("%d/%m/%Y")
+
+    # Trova ID_Agente del cliente
+    clienti = clienti_sheet.get_all_records()
+    agente_cliente = next((c["Agente"] for c in clienti if c["ID_Cliente"] == id_cliente), None)
+
+    if not agente_cliente:
+        return jsonify({"message": "Cliente non trovato"}), 404
+
+    # Trova o crea cartella su Drive
+    query = (f"name='{id_cliente}' and mimeType='application/vnd.google-apps.folder' "
+             f"and '{main_folder_id}' in parents and trashed=false")
+    results = drive_service.files().list(q=query, spaces='drive', fields="files(id, name)").execute()
+    folders = results.get('files', [])
+    if folders:
+        folder_id = folders[0]['id']
+    else:
+        folder_metadata = {
+            'name': id_cliente,
+            'mimeType': 'application/vnd.google-apps.folder',
+            'parents': [main_folder_id]
+        }
+        folder = drive_service.files().create(body=folder_metadata, fields='id').execute()
+        folder_id = folder.get('id')
+
+    # Salva file temporaneo
+    import shutil
+    temp_fd, temp_path = tempfile.mkstemp()
+    with os.fdopen(temp_fd, 'wb') as tmp:
+        shutil.copyfileobj(file.stream, tmp)
+
+    media = MediaFileUpload(temp_path)
+    file_metadata = {'name': filename, 'parents': [folder_id]}
+    uploaded = drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+    file_id = uploaded.get('id')
+
+    # Rendi il file visibile pubblicamente
+    drive_service.permissions().create(
+        fileId=file_id,
+        body={
+            "role": "reader",
+            "type": "anyone",
+            "allowFileDiscovery": False
+        }
+    ).execute()
+
+    try:
+        os.remove(temp_path)
+    except Exception as e:
+        print("⚠️ Impossibile eliminare il file temporaneo:", e)
+
+    # Log
+    try:
+        filelog_sheet.append_row([
+            file_id,
+            id_cliente,
+            filename,
+            agente_cliente,
+            data_oggi,
+            "In attesa",
+            "ADMIN",
+            "FALSE"
+        ])
+    except Exception as e:
+        return jsonify({"message": "File caricato, ma errore nel log", "error": str(e)}), 500
+
+    return jsonify({"message": "File caricato correttamente da Admin"})
+
+
+# -------------------------------------------------------------------
 #  E) GESTIONE STATI, TIPI, ESITI (Impostazioni)
 # -------------------------------------------------------------------
 @app.route("/stati-cliente", methods=["GET"])

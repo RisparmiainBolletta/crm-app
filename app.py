@@ -301,15 +301,21 @@ def get_files(id_cliente):
     file_links = []
     for f in files:
         stato = "In attesa"
+        caricato_da = "AGENTE"
+        letto = "TRUE"
         for r in log_records:
             if r['ID_File'] == f['id']:
-                stato = r['Stato']
+                stato = r.get('Stato', "In attesa")
+                caricato_da = r.get('Caricato_da', "AGENTE")
+                letto = r.get('Letto_da_Agente', "TRUE")
                 break
         file_links.append({
             'name': f['name'],
             'id': f['id'],
             'url': f"https://drive.google.com/uc?export=view&id={f['id']}",
-            'stato': stato
+            'stato': stato,
+            'caricato_da': caricato_da,
+            'letto_da_agente': letto
         })
 
     return jsonify(file_links)
@@ -456,6 +462,22 @@ def get_esiti_interazione():
         return jsonify(esiti)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# -------------------------------------------------------------------
+#  F) Quando l’agente apre i documenti → aggiorna
+# -------------------------------------------------------------------
+@app.route("/files/segna-letti/<id_cliente>", methods=["POST"])
+def segna_letti_da_agente(id_cliente):
+    if 'agente' not in session:
+        return jsonify({"message": "Non autenticato"}), 401
+
+    log_records = filelog_sheet.get_all_records()
+    for idx, row in enumerate(log_records):
+        if row["ID_Cliente"] == id_cliente and row["Caricato_da"] == "ADMIN" and row["Letto_da_Agente"] != "TRUE":
+            riga_excel = idx + 2  # +2 = intestazione + base 1
+            filelog_sheet.update(f"H{riga_excel}", "TRUE")
+    return jsonify({"message": "Aggiornati i file come letti"})
+
 
 # -------------------------------------------------------------------
 #  F) ROUTE PRINCIPALI DI AVVIO

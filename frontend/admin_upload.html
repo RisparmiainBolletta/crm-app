@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload File - Admin</title>
+  <style>
+    body {
+      font-family: Arial;
+      max-width: 600px;
+      margin: 40px auto;
+    }
+    h2 { text-align: center; }
+    label { font-weight: bold; }
+    select, input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    #messaggio {
+      font-weight: bold;
+      color: green;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h2>Upload Documenti - Admin</h2>
+
+  <form id="upload-form">
+    <label for="cliente">Seleziona Cliente:</label>
+    <select id="cliente" required>
+      <option value="">-- Caricamento clienti... --</option>
+    </select>
+
+    <label for="file">Seleziona File:</label>
+    <input type="file" id="file" required>
+
+    <button type="submit">Carica File</button>
+  </form>
+
+  <p id="messaggio"></p>
+
+  <script>
+    // Carica lista clienti
+    fetch("/clienti-admin")
+      .then(res => res.json())
+      .then(data => {
+        const select = document.getElementById("cliente");
+        select.innerHTML = '<option value="">-- Seleziona cliente --</option>';
+        data.forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c.ID_Cliente;
+          opt.textContent = `${c.ID_Cliente} - ${c.Nome}`;
+          select.appendChild(opt);
+        });
+      });
+
+    // Upload
+    document.getElementById("upload-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const idCliente = document.getElementById("cliente").value;
+      const fileInput = document.getElementById("file");
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      fetch(`/admin-upload/${idCliente}`, {
+        method: 'POST',
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("messaggio").textContent = data.message;
+          document.getElementById("upload-form").reset();
+        });
+    });
+  </script>
+</body>
+</html>

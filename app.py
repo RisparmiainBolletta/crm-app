@@ -223,7 +223,7 @@ def upload_file(id_cliente):
         folder = drive_service.files().create(body=file_metadata, fields='id').execute()
         folder_id = folder.get('id')
 
-    # Crea file temporaneo su Windows
+    # Crea file temporaneo
     import shutil
     temp_fd, temp_path = tempfile.mkstemp()
     with os.fdopen(temp_fd, 'wb') as tmp:
@@ -231,20 +231,21 @@ def upload_file(id_cliente):
 
     # Caricamento su Drive
     media = MediaFileUpload(temp_path)
-    file_metadata = {'name': filename, 'parents': [folder_id]}
-    uploaded = drive_service.files().create(
-        body=file_metadata, media_body=media, fields='id'
-    ).execute()
+    file_metadata = {
+        'name': filename,
+        'parents': [folder_id],
+        'mimeType': file.mimetype or 'application/octet-stream'
+    }
 
-    # Rimuovi file temporaneo
-    try:
-        os.remove(temp_path)
-    except Exception as e:
-        print("⚠️ Impossibile eliminare il file temporaneo:", e)
+    uploaded = drive_service.files().create(
+        body=file_metadata,
+        media_body=media,
+        fields='id'
+    ).execute()
 
     file_id = uploaded.get("id")
 
-    # 🔓 Rendi il file visibile pubblicamente
+    # 🔓 Rendi il file visibile pubblicamente (permessi + published)
     drive_service.permissions().create(
         fileId=file_id,
         body={
@@ -252,6 +253,12 @@ def upload_file(id_cliente):
             "type": "anyone"
         }
     ).execute()
+
+    # Pulizia file temporaneo
+    try:
+        os.remove(temp_path)
+    except Exception as e:
+        print("⚠️ Impossibile eliminare il file temporaneo:", e)
 
     # Log su File_Allegati
     try:

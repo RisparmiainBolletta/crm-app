@@ -308,7 +308,7 @@ def get_files(id_cliente):
         file_links.append({
             'name': f['name'],
             'id': f['id'],
-            'url': f"https://drive.google.com/uc?export=view&id={f['id']}"
+            'url': f"https://drive.google.com/uc?export=view&id={f['id']}",
             'stato': stato
         })
 

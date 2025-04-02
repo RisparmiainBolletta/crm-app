@@ -320,25 +320,28 @@ def get_files(id_cliente):
 
     return jsonify(file_links)
 
-@app.route("/file/<file_id>", methods=["DELETE"])
-def delete_file(file_id):
-    if 'agente' not in session:
-        return jsonify({"message": "Non autenticato"}), 401
-
-    # Se log in File_Allegati = "Approvato", blocca
-    log_records = filelog_sheet.get_all_records()
-    for r in log_records:
-        if r['ID_File'] == file_id:
-            if r['Stato'].strip().lower() == "approvato":
-                return jsonify({"message": "File approvato. Non puoi eliminarlo."}), 403
-            break
-
-    # Elimina effettivamente su Drive
-    try:
-        drive_service.files().delete(fileId=file_id).execute()
-        return jsonify({"message": "File eliminato"})
-    except Exception as e:
-        return jsonify({"message": "Errore durante l'eliminazione", "error": str(e)}), 500
+    @app.route("/file/<file_id>", methods=["DELETE"])
+    def delete_file(file_id):
+        if 'agente' not in session:
+            return jsonify({"message": "Non autenticato"}), 401
+    
+        log_records = filelog_sheet.get_all_records()
+        for idx, r in enumerate(log_records):
+            if r['ID_File'] == file_id:
+                if r['Stato'].strip().lower() == "approvato":
+                    return jsonify({"message": "File approvato. Non puoi eliminarlo."}), 403
+                try:
+                    drive_service.files().delete(fileId=file_id).execute()
+    
+                    # 📌 Aggiorna lo stato in "ELIMINATO"
+                    riga_excel = idx + 2  # +2: riga effettiva (salta intestazione)
+                    filelog_sheet.update(f"F{riga_excel}", [["ELIMINATO"]])
+    
+                    return jsonify({"message": "File eliminato e stato aggiornato"})
+                except Exception as e:
+                    return jsonify({"message": "Errore durante l'eliminazione", "error": str(e)}), 500
+    
+        return jsonify({"message": "File non trovato nel log"}), 404
 
 # -------------------------------------------------------------------
 #  D1) UPLOAD FILE DA ADMIN

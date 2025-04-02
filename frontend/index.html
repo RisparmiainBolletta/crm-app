@@ -152,6 +152,22 @@
         background-color: #c0392b;
     }
 
+    .aggiungi-btn {
+        font-size: 13px;
+        padding: 6px 12px;
+        background-color: #2ecc71;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 140px;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+    
+    .aggiungi-btn:hover {
+        background-color: #27ae60;
+    }
      
 </style>
 
@@ -171,7 +187,7 @@
     <select id="stato" required>
         <option value="">-- Caricamento stati... --</option>
     </select>
-    <button type="submit">Aggiungi Cliente</button>
+    <button type="submit" class="aggiungi-btn">➕ Aggiungi Cliente</button>
 </form>
 <p id="messaggio-successo" style="color: green; font-weight: bold;"></p>
 

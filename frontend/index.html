@@ -5,34 +5,113 @@
     <meta charset="UTF-8">
     <title>CRM - Clienti</title>
     <style>
-        body { font-family: Arial; padding: 20px; }
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .logout { background: #e74c3c; color: white; border: none; padding: 8px 10px; cursor: pointer; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-        th, td { border: 1px solid #C1DBFB; padding: 8px; }
-        th { background-color: #BAD9FC; }
-        input, select, button { padding: 8px; margin: 5px 0; max-width: 300px; width: 100%; }
-        .sezione-extra { margin: 10px 0 30px 0; background: #f9f9f9; padding: 15px; border: 1px solid #ccc; }
-        .mini-btn { cursor: pointer; font-size: 14px; margin-right: 8px; }
-        .approvato { color: green; }
-        .in-attesa { color: orange; }
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #f4f8fb;
+        color: #333;
+        padding: 20px;
+    }
 
-                .loader {
-                  border: 6px solid #f3f3f3;
-                  border-top: 6px solid #3498db;
-                  border-radius: 50%;
-                  width: 36px;
-                  height: 36px;
-                  animation: spin 1s linear infinite;
-                  margin: 10px auto;
-                }
-                
-                @keyframes spin {
-                  0% { transform: rotate(0deg); }
-                  100% { transform: rotate(360deg); }
-                }
-        
-    </style>
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        background-color: #3498db;
+        padding: 15px 20px;
+        border-radius: 6px;
+        color: white;
+    }
+
+    .logout {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        background-color: white;
+        box-shadow: 0 0 5px rgba(0,0,0,0.05);
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    th, td {
+        border-bottom: 1px solid #eee;
+        padding: 10px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f0f6fa;
+        color: #333;
+    }
+
+    input, select, button {
+        padding: 10px;
+        margin: 5px 0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 100%;
+        max-width: 300px;
+    }
+
+    button {
+        background-color: #3498db;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #2980b9;
+    }
+
+    .sezione-extra {
+        margin: 10px 0 30px 0;
+        background: #ffffff;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .mini-btn {
+        cursor: pointer;
+        font-size: 14px;
+        margin-right: 8px;
+        color: #3498db;
+    }
+
+    .approvato {
+        color: green;
+    }
+
+    .in-attesa {
+        color: orange;
+    }
+
+    .loader {
+        border: 6px solid #f3f3f3;
+        border-top: 6px solid #3498db;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        animation: spin 1s linear infinite;
+        margin: 10px auto;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
 </head>
 <body>
 

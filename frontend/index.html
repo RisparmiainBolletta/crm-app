@@ -16,6 +16,22 @@
         .mini-btn { cursor: pointer; font-size: 14px; margin-right: 8px; }
         .approvato { color: green; }
         .in-attesa { color: orange; }
+
+                .loader {
+                  border: 6px solid #f3f3f3;
+                  border-top: 6px solid #3498db;
+                  border-radius: 50%;
+                  width: 36px;
+                  height: 36px;
+                  animation: spin 1s linear infinite;
+                  margin: 10px auto;
+                }
+                
+                @keyframes spin {
+                  0% { transform: rotate(0deg); }
+                  100% { transform: rotate(360deg); }
+                }
+        
     </style>
 </head>
 <body>
@@ -265,7 +281,7 @@ async function mostraDocumenti(idCliente) {
     container.innerHTML = `
         <div class="sezione-extra">
           <h4>Documenti per ${idCliente}</h4>
-          <p id="caricamento-${idCliente}" style="color: gray;">⏳ Attendere caricamento in corso...</p>
+          <div id="loader-${idCliente}" class="loader"></div>
           <form onsubmit="uploadFile(event, '${idCliente}')">
             <input type="file" id="file-${idCliente}" required>
             <button type="submit">Carica</button>
@@ -275,18 +291,19 @@ async function mostraDocumenti(idCliente) {
     `;
 
     // Mostra messaggio di caricamento
-    document.getElementById(`caricamento-${idCliente}`).style.display = "block";
+    document.getElementById(`loader-${idCliente}`).style.display = "block";
 
     try {
-        await caricaDocumenti(idCliente);  // carica lista documenti
-        await fetch(`/files/segna-letti/${idCliente}`, { method: "POST" });  // aggiorna lettura
+        await caricaDocumenti(idCliente);
+        await fetch(`/files/segna-letti/${idCliente}`, { method: "POST" });
+
         const btn = document.getElementById(`doc-btn-${idCliente}`);
         if (btn) btn.innerHTML = "📎 Documenti";
     } catch (error) {
         console.error("Errore nel caricamento documenti:", error);
     } finally {
         // Nasconde il messaggio di caricamento
-        document.getElementById(`caricamento-${idCliente}`).style.display = "none";
+        document.getElementById(`loader-${idCliente}`).style.display = "none";
     }
 }
 

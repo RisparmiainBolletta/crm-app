@@ -215,19 +215,20 @@
               </td>
             `;
             tbody.appendChild(tr);
-
+    
             const extraRow = document.createElement('tr');
             const extraCell = document.createElement('td');
             extraCell.colSpan = 8;
             extraCell.innerHTML = `<div id="extra-${cliente.ID_Cliente}"></div>`;
             extraRow.appendChild(extraCell);
             tbody.appendChild(extraRow);
-
-            // 🔢 Conta documenti per cliente
-            contaDocumenti(cliente.ID_Cliente);
+    
+            // ✅ Aspetta un attimo prima di modificare il DOM
+            setTimeout(() => contaDocumenti(cliente.ID_Cliente), 0);
           });
         });
     }
+
 
     function contaDocumenti(idCliente) {
       fetch(`/files/${idCliente}`)

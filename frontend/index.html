@@ -436,11 +436,10 @@ async function mostraDocumenti(idCliente) {
         <div class="sezione-extra">
           <h4>Documenti per ${idCliente}</h4>
           <div id="loader-${idCliente}" class="loader"></div>
-          <form onsubmit="uploadFile(event, 'ID_Cliente')">
+          <form onsubmit="uploadFile(event, '${idCliente}')">
                 <input type="file" id="file-ID_Cliente" required>
                 <button type="submit" class="carica-btn">Carica</button>
           </form>
-
           <div id="lista-documenti-${idCliente}"></div>
         </div>
     `;

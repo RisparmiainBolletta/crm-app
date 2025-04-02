@@ -222,7 +222,24 @@
             extraCell.innerHTML = `<div id="extra-${cliente.ID_Cliente}"></div>`;
             extraRow.appendChild(extraCell);
             tbody.appendChild(extraRow);
+
+            // 🔢 Conta documenti per cliente
+            contaDocumenti(cliente.ID_Cliente);
           });
+        });
+    }
+
+    function contaDocumenti(idCliente) {
+      fetch(`/files/${idCliente}`)
+        .then(res => res.json())
+        .then(data => {
+          const btn = document.getElementById(`doc-btn-${idCliente}`);
+          if (btn) {
+            btn.innerHTML = `📎 Documenti (${data.length})`;
+            if (data.some(f => f.stato === "In attesa")) {
+              btn.innerHTML += ' 🔔';
+            }
+          }
         });
     }
 

@@ -290,43 +290,31 @@ function uploadFile(e, idCliente) {
     .then(() => caricaDocumenti(idCliente));
 }
 
-function caricaDocumenti(idCliente) {
-    fetch(`/files/${idCliente}`)
-    .then(res => res.json())
-    .then(data => {
-        const container = document.getElementById(`lista-documenti-${idCliente}`);
-        if (!data || data.length === 0) {
-            container.innerHTML = "<p>Nessun documento caricato.</p>";
-            return;
-        }
-        let html = "<ul>";
-        data.forEach(doc => {
-            const ext = doc.name.split('.').pop().toLowerCase();
-            const stato = doc.stato === "Approvato" ? "✅" : "⏳";
-            const colore = doc.stato === "Approvato" ? "approvato" : "in-attesa";
-        
-            let preview = "";
-            if (["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(ext)) {
-                // Anteprima immagine da Drive
-                preview = `<br><img src="https://drive.google.com/thumbnail?id=${doc.id}" alt="${doc.name}" style="max-width: 200px; border:1px solid #ccc; margin-top:5px;">`;
-            } else if (ext === "pdf") {
-                // Anteprima PDF in iframe
-                preview = `<br><iframe src="https://drive.google.com/file/d/${doc.id}/preview" width="100%" height="300px" style="border:1px solid #ccc;"></iframe>`;
-            }
-        
-            html += `<li style="margin-bottom: 20px;">
-                <a href="${doc.url}" target="_blank">${doc.name}</a>
-                <span class="${colore}"> ${stato} ${doc.stato}</span>
-                ${doc.stato !== "Approvato" ? `<button onclick="eliminaFile('${doc.id}', '${idCliente}')">🗑</button>` : ""}
-                ${preview}
-            </li>`;
-        });
-        html += "</ul>";
+    function caricaDocumenti(idCliente) {
+        fetch(`/files/${idCliente}`)
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById(`lista-documenti-${idCliente}`);
+                if (!data || data.length === 0) {
+                    container.innerHTML = "<p>Nessun documento caricato.</p>";
+                    return;
+                }
 
+                let html = "<ul>";
+                data.forEach(doc => {
+                    const stato = doc.stato === "Approvato" ? "✅" : "⏳";
+                    const colore = doc.stato === "Approvato" ? "approvato" : "in-attesa";
 
-        container.innerHTML = html;
-    });
-}
+                    html += `<li>
+                    <a href="${doc.url}" target="_blank">${doc.name}</a>
+                    <span class="${colore}"> ${stato} ${doc.stato}</span>
+                    ${doc.stato !== "Approvato" ? `<button onclick="eliminaFile('${doc.id}', '${idCliente}')">🗑</button>` : ""}
+                </li>`;
+                });
+                html += "</ul>";
+                container.innerHTML = html;
+            });
+    }
 
 function eliminaFile(idFile, idCliente) {
     if (!confirm("Sei sicuro di voler eliminare questo file?")) return;

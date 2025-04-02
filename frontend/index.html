@@ -260,11 +260,12 @@ function aggiungiInterazione(e, idCliente) {
 }
 
 // =========================== DOCUMENTI ===========================
-    async function mostraDocumenti(idCliente) {
-        const container = document.getElementById(`extra-${idCliente}`);
-        container.innerHTML = `
+async function mostraDocumenti(idCliente) {
+    const container = document.getElementById(`extra-${idCliente}`);
+    container.innerHTML = `
         <div class="sezione-extra">
           <h4>Documenti per ${idCliente}</h4>
+          <p id="caricamento-${idCliente}" style="color: gray;">⏳ Attendere caricamento in corso...</p>
           <form onsubmit="uploadFile(event, '${idCliente}')">
             <input type="file" id="file-${idCliente}" required>
             <button type="submit">Carica</button>
@@ -273,19 +274,21 @@ function aggiungiInterazione(e, idCliente) {
         </div>
     `;
 
-        // ✅ PRIMA carica i documenti
-        await caricaDocumenti(idCliente);
+    // Mostra messaggio di caricamento
+    document.getElementById(`caricamento-${idCliente}`).style.display = "block";
 
-        // ✅ POI segna come letti i file non ancora letti
-        await fetch(`/files/segna-letti/${idCliente}`, { method: "POST" });
-
-        // ✅ Aggiorna icona
-        const docBtn = document.getElementById(`doc-btn-${idCliente}`);
-        if (docBtn) {
-            docBtn.innerHTML = "📎 Documenti";
-        }
+    try {
+        await caricaDocumenti(idCliente);  // carica lista documenti
+        await fetch(`/files/segna-letti/${idCliente}`, { method: "POST" });  // aggiorna lettura
+        const btn = document.getElementById(`doc-btn-${idCliente}`);
+        if (btn) btn.innerHTML = "📎 Documenti";
+    } catch (error) {
+        console.error("Errore nel caricamento documenti:", error);
+    } finally {
+        // Nasconde il messaggio di caricamento
+        document.getElementById(`caricamento-${idCliente}`).style.display = "none";
     }
-
+}
 
 function uploadFile(e, idCliente) {
     e.preventDefault();

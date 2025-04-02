@@ -425,7 +425,7 @@ def admin_upload_file(id_cliente):
             data_oggi,
             "In attesa",
             "ADMIN",
-            "FALSE"
+            "false"
         ])
     except Exception as e:
         return jsonify({"message": "File caricato, ma errore nel log", "error": str(e)}), 500

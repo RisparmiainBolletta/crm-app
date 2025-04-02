@@ -481,7 +481,7 @@ def segna_letti_da_agente(id_cliente):
             row.get("ID_Agente") == codice_agente):
 
             riga_excel = idx + 2
-            filelog_sheet.update(f"H{riga_excel}", "TRUE")  # colonna H = Letto_da_Agente
+            filelog_sheet.update(f"H{riga_excel}", [["TRUE"]])  # colonna H = Letto_da_Agente
 
     return jsonify({"message": "Aggiornamento completato"})
 

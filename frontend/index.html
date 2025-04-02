@@ -168,8 +168,24 @@
     .aggiungi-btn:hover {
         background-color: #27ae60;
     }
-     
-</style>
+
+    .aggiungi-inter-btn {
+        font-size: 12px;
+        padding: 5px 10px;
+        background-color: #8e44ad;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 6px;
+        width: 100px;
+    }
+    
+    .aggiungi-inter-btn:hover {
+        background-color: #732d91;
+    }
+        
+    </style>
 
 </head>
 <body>
@@ -361,7 +377,7 @@ function mostraInterazioni(idCliente) {
             <option value="">-- Caricamento esiti... --</option>
           </select>
           <input type="text" id="descrizione-${idCliente}" placeholder="Descrizione" required>
-          <button type="submit">Aggiungi</button>
+          <button type="submit" class="aggiungi-inter-btn">➕ Aggiungi</button>
         </form>
         <div id="lista-interazioni-${idCliente}"></div>
       </div>

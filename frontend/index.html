@@ -83,10 +83,21 @@
 
     .mini-btn {
         cursor: pointer;
-        font-size: 14px;
-        margin-right: 8px;
-        color: #3498db;
+        font-size: 16px;       /* ← Più grande */
+        font-weight: bold;     /* ← Testo più marcato */
+        padding: 6px 10px;     /* ← Aggiungi spaziatura */
+        border-radius: 4px;
+        background-color: #ecf5fd;
+        color: #2980b9;
+        display: inline-block;
+        margin: 4px;
+        transition: background 0.3s;
     }
+    
+    .mini-btn:hover {
+        background-color: #d6ecfc;
+    }
+
 
     .approvato {
         color: green;

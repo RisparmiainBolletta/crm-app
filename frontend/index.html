@@ -1,583 +1,450 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <title>CRM - Clienti</title>
-    <style>
+  <meta charset="UTF-8">
+  <title>CRM - Clienti</title>
+  <style>
     body {
-        font-family: 'Segoe UI', sans-serif;
-        background-color: #f4f8fb;
-        color: #333;
-        padding: 20px;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f8fb;
+      color: #333;
+      padding: 20px;
     }
 
     header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        background-color: #3498db;
-        padding: 15px 20px;
-        border-radius: 6px;
-        color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      background-color: #3498db;
+      padding: 15px 20px;
+      border-radius: 6px;
+      color: white;
     }
 
     .logout {
-        background: #e74c3c;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 5px;
-        cursor: pointer;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
     }
 
     table {
-        border-collapse: collapse;
-        width: 100%;
-        background-color: white;
-        box-shadow: 0 0 5px rgba(0,0,0,0.05);
-        border-radius: 6px;
-        overflow: hidden;
+      border-collapse: collapse;
+      width: 100%;
+      background-color: white;
+      box-shadow: 0 0 5px rgba(0,0,0,0.05);
+      border-radius: 6px;
+      overflow: hidden;
     }
 
     th, td {
-        border-bottom: 1px solid #eee;
-        padding: 10px;
-        text-align: left;
+      border-bottom: 1px solid #eee;
+      padding: 10px;
+      text-align: left;
     }
 
     th {
-        background-color: #f0f6fa;
-        color: #333;
+      background-color: #f0f6fa;
+      color: #333;
     }
 
-    input, select, button {
-        padding: 10px;
-        margin: 5px 0;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        width: 100%;
-        max-width: 300px;
+    input, select {
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+      max-width: 300px;
     }
 
     button {
-        background-color: #3498db;
-        color: white;
-        font-weight: bold;
-        cursor: pointer;
-    }
-
-    button:hover {
-        background-color: #2980b9;
-    }
-
-    .sezione-extra {
-        margin: 10px 0 30px 0;
-        background: #ffffff;
-        padding: 15px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-
-    .mini-btn {
-        cursor: pointer;
-        font-size: 16px;       /* ← Più grande */
-        font-weight: bold;     /* ← Testo più marcato */
-        padding: 6px 10px;     /* ← Aggiungi spaziatura */
-        border-radius: 4px;
-        background-color: #ecf5fd;
-        color: #2980b9;
-        display: inline-block;
-        margin: 4px;
-        transition: background 0.3s;
-    }
-    
-    .mini-btn:hover {
-        background-color: #d6ecfc;
-    }
-
-
-    .approvato {
-        color: green;
-    }
-
-    .in-attesa {
-        color: orange;
-    }
-
-    .loader {
-        border: 6px solid #f3f3f3;
-        border-top: 6px solid #3498db;
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        animation: spin 1s linear infinite;
-        margin: 10px auto;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+      cursor: pointer;
     }
 
     .carica-btn {
-        font-size: 12px;       /* Dimensione del testo più piccola */
-        padding: 5px 10px;     /* Riduzione dello spazio interno */
-        border-radius: 4px;    /* Bordi arrotondati per un aspetto moderno */
-        background-color: #3498db; /* Colore di sfondo */
-        color: white;          /* Colore del testo */
-        border: none;          /* Rimozione del bordo */
-        cursor: pointer;       /* Cambio del cursore al passaggio */
-        width: 80px;  /* 👈 Imposta la larghezza desiderata */
-    }
-    
-    .carica-btn:hover {
-        background-color: #2980b9; /* Colore di sfondo al passaggio del mouse */
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      width: 100px;
     }
 
     .elimina-btn {
-        font-size: 12px;
-        padding: 4px 8px;
-        background-color: #e74c3c;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        width: 80px;
-    }
-    
-    .elimina-btn:hover {
-        background-color: #c0392b;
+      font-size: 12px;
+      padding: 4px 8px;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 80px;
+      margin-left: 10px;
     }
 
     .aggiungi-btn {
-        font-size: 13px;
-        padding: 6px 12px;
-        background-color: #2ecc71;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        width: 140px;
-        font-weight: bold;
-        margin-top: 10px;
-    }
-    
-    .aggiungi-btn:hover {
-        background-color: #27ae60;
+      font-size: 13px;
+      padding: 6px 12px;
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 140px;
+      font-weight: bold;
+      margin-top: 10px;
     }
 
     .aggiungi-inter-btn {
-        font-size: 12px;
-        padding: 5px 10px;
-        background-color: #8e44ad;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-top: 6px;
-        width: 100px;
+      font-size: 12px;
+      padding: 5px 10px;
+      background-color: #8e44ad;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 6px;
+      width: 100px;
     }
-    
-    .aggiungi-inter-btn:hover {
-        background-color: #732d91;
-    }
-        
-    </style>
 
+    .aggiungi-btn:hover { background-color: #27ae60; }
+    .carica-btn:hover { background-color: #2980b9; }
+    .elimina-btn:hover { background-color: #c0392b; }
+    .aggiungi-inter-btn:hover { background-color: #732d91; }
+
+    .sezione-extra {
+      margin: 10px 0 30px 0;
+      background: #ffffff;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .mini-btn {
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 8px;
+      color: #3498db;
+    }
+
+    .approvato { color: green; }
+    .in-attesa { color: orange; }
+
+    .loader {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #3498db;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      animation: spin 1s linear infinite;
+      margin: 10px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
 
-<header>
+  <header>
     <h2>Benvenuto, <span id="nome-agente">Agente</span></h2>
     <button class="logout" onclick="logout()">Logout</button>
-</header>
+  </header>
 
-<h3>Aggiungi nuovo cliente</h3>
-<form id="form-cliente">
+  <h3>Aggiungi nuovo cliente</h3>
+  <form id="form-cliente">
     <input type="text" placeholder="Nome" id="nome" required>
     <input type="email" placeholder="Email" id="email" required>
     <input type="text" placeholder="Telefono" id="telefono" required>
     <select id="stato" required>
-        <option value="">-- Caricamento stati... --</option>
-    </select>
-    <button type="submit" class="aggiungi-btn">➕ Aggiungi</button>
-</form>
-<p id="messaggio-successo" style="color: green; font-weight: bold;"></p>
-
-<hr>
-<h3>Modifica cliente</h3>
-<input type="text" id="ricerca-cliente" placeholder="Cerca per ID o Nome" oninput="cercaCliente()" />
-<div id="modifica-cliente-box" style="display: none; margin-top: 10px;">
-  <form id="form-modifica-cliente">
-    <input type="text" id="mod-id" disabled />
-    <input type="text" id="mod-nome" required />
-    <input type="email" id="mod-email" required />
-    <input type="text" id="mod-telefono" required />
-    <select id="mod-stato" required>
       <option value="">-- Caricamento stati... --</option>
     </select>
-    <button type="submit">Salva modifiche</button>
+    <button type="submit" class="aggiungi-btn">➕ Aggiungi</button>
   </form>
-</div>
 
-<h3>Lista Clienti</h3>
-<table>
+  <p id="messaggio-successo" style="color: green; font-weight: bold;"></p>
+
+  <h3>Lista Clienti</h3>
+  <table>
     <thead>
-        <tr>
-            <th>ID</th><th>Nome</th><th>Email</th><th>Telefono</th><th>Agente</th><th>Stato</th><th>Provvigione</th><th>Azioni</th>
-        </tr>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Email</th>
+        <th>Telefono</th>
+        <th>Agente</th>
+        <th>Stato</th>
+        <th>Provvigione</th>
+        <th>Azioni</th>
+      </tr>
     </thead>
     <tbody id="clienti-body"></tbody>
-</table>
+  </table>
 
-<script>
-function logout() {
-    window.location.href = "/logout";
-}
-
-// =========================== CLIENTI ===========================
-function caricaClienti() {
-    fetch('/clienti')
-        .then(res => {
-            if (res.status === 401) window.location.href = "/";
-            return res.json();
-        })
-        .then(data => {
-            if (data.length > 0) {
-                document.getElementById("nome-agente").textContent = data[0].Agente || "Agente";
-            }
-
-            const tbody = document.getElementById('clienti-body');
-            tbody.innerHTML = '';
-
-            data.forEach(cliente => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                  <td>${cliente.ID_Cliente}</td>
-                  <td>${cliente.Nome}</td>
-                  <td>${cliente.Email}</td>
-                  <td>${cliente.Telefono}</td>
-                  <td>${cliente.Agente}</td>
-                  <td>${cliente.Stato}</td>
-                  <td>${cliente.Provvigione}</td>
-                  <td>
-                      <span class="mini-btn" onclick="mostraInterazioni('${cliente.ID_Cliente}')">📋 Interazioni</span>
-                      <span class="mini-btn" id="doc-btn-${cliente.ID_Cliente}" onclick="mostraDocumenti('${cliente.ID_Cliente}')">📎 Documenti</span>
-                  </td>
-                `;
-                tbody.appendChild(tr);
-
-                const extraRow = document.createElement('tr');
-                const extraCell = document.createElement('td');
-                extraCell.colSpan = 8;
-                extraCell.innerHTML = `<div id="extra-${cliente.ID_Cliente}"></div>`;
-                extraRow.appendChild(extraCell);
-                tbody.appendChild(extraRow);
-
-                // ✅ Chiamata alla funzione dopo aver aggiunto il bottone
-                verificaNotificaDocumenti(cliente.ID_Cliente);
-            });
-        });
-}
-
-document.getElementById("form-cliente").addEventListener("submit", function (e) {
-    e.preventDefault();
-    const nuovoCliente = {
-        Nome: document.getElementById('nome').value,
-        Email: document.getElementById('email').value,
-        Telefono: document.getElementById('telefono').value,
-        Stato: document.getElementById('stato').value
-    };
-    fetch('/clienti', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nuovoCliente)
-    })
-    .then(res => res.json())
-    .then(data => {
-        caricaClienti();
-        document.getElementById("form-cliente").reset();
-        const msg = document.getElementById("messaggio-successo");
-        msg.textContent = data.message;
-        setTimeout(() => msg.textContent = "", 5000);
-    });
-});
-
-// =========================== MODIFICA CLIENTE ===========================
-function cercaCliente() {
-    const query = document.getElementById("ricerca-cliente").value.toLowerCase();
-    if (!query) {
-        document.getElementById("modifica-cliente-box").style.display = "none";
-        return;
+  <script>
+    function logout() {
+      window.location.href = "/logout";
     }
 
-    fetch("/clienti")
+    function caricaClienti() {
+      fetch('/clienti')
         .then(res => res.json())
         .then(data => {
-            const cliente = data.find(c =>
-                c.ID_Cliente.toLowerCase().includes(query) ||
-                c.Nome.toLowerCase().includes(query)
-            );
-            if (cliente) {
-                document.getElementById("mod-id").value = cliente.ID_Cliente;
-                document.getElementById("mod-nome").value = cliente.Nome;
-                document.getElementById("mod-email").value = cliente.Email;
-                document.getElementById("mod-telefono").value = cliente.Telefono;
-                caricaStatiCliente("mod-stato");
-                // Asincrono: aspetta caricamento stati
-                setTimeout(() => {
-                    document.getElementById("mod-stato").value = cliente.Stato;
-                }, 200);
-                document.getElementById("modifica-cliente-box").style.display = "block";
-            } else {
-                document.getElementById("modifica-cliente-box").style.display = "none";
-            }
+          const tbody = document.getElementById('clienti-body');
+          tbody.innerHTML = '';
+          data.forEach(cliente => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${cliente.ID_Cliente}</td>
+              <td>${cliente.Nome}</td>
+              <td>${cliente.Email}</td>
+              <td>${cliente.Telefono}</td>
+              <td>${cliente.Agente}</td>
+              <td>${cliente.Stato}</td>
+              <td>${cliente.Provvigione}</td>
+              <td>
+                <span class="mini-btn" onclick="mostraInterazioni('${cliente.ID_Cliente}')">📋 Interazioni</span>
+                <span class="mini-btn" onclick="mostraDocumenti('${cliente.ID_Cliente}')" id="doc-btn-${cliente.ID_Cliente}">📎 Documenti</span>
+              </td>
+            `;
+            tbody.appendChild(tr);
+
+            const extraRow = document.createElement('tr');
+            const extraCell = document.createElement('td');
+            extraCell.colSpan = 8;
+            extraCell.innerHTML = `<div id="extra-${cliente.ID_Cliente}"></div>`;
+            extraRow.appendChild(extraCell);
+            tbody.appendChild(extraRow);
+          });
         });
-}
+    }
 
-document.getElementById("form-modifica-cliente").addEventListener("submit", function(e) {
-    e.preventDefault();
-    const id = document.getElementById("mod-id").value;
-    const clienteAggiornato = {
-        Nome: document.getElementById("mod-nome").value,
-        Email: document.getElementById("mod-email").value,
-        Telefono: document.getElementById("mod-telefono").value,
-        Stato: document.getElementById("mod-stato").value
-    };
-    fetch(`/clienti/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(clienteAggiornato)
-    })
-    .then(res => res.json())
-    .then(data => {
-        caricaClienti();
-        document.getElementById("form-modifica-cliente").reset();
-        document.getElementById("ricerca-cliente").value = "";
-        document.getElementById("modifica-cliente-box").style.display = "none";
-        alert(data.message);
-    });
-});
+    async function mostraDocumenti(idCliente) {
+      const container = document.getElementById(`extra-${idCliente}`);
+      container.innerHTML = `
+        <div class="sezione-extra">
+          <h4>Documenti per ${idCliente}</h4>
+          <div id="loader-${idCliente}" class="loader"></div>
+          <form onsubmit="uploadFile(event, '${idCliente}')">
+            <input type="file" id="file-${idCliente}" required>
+            <button type="submit" class="carica-btn">Carica</button>
+          </form>
+          <div id="lista-documenti-${idCliente}"></div>
+        </div>
+      `;
 
-// =========================== INTERAZIONI ===========================
-function mostraInterazioni(idCliente) {
-    const container = document.getElementById(`extra-${idCliente}`);
-    container.innerHTML = `
-      <div class="sezione-extra">
-        <h4>Interazioni per ${idCliente}</h4>
-        <form onsubmit="aggiungiInterazione(event, '${idCliente}')">
-          <input type="date" id="data-${idCliente}" required>
-          <select id="tipo-${idCliente}" required>
-            <option value="">-- Caricamento tipi... --</option>
-          </select>
-          <select id="esito-${idCliente}" required>
-            <option value="">-- Caricamento esiti... --</option>
-          </select>
-          <input type="text" id="descrizione-${idCliente}" placeholder="Descrizione" required>
-          <button type="submit" class="aggiungi-inter-btn">➕ Aggiungi</button>
-        </form>
-        <div id="lista-interazioni-${idCliente}"></div>
-      </div>
-    `;
-    caricaTipiInterazione(`tipo-${idCliente}`);
-    caricaEsitiInterazione(`esito-${idCliente}`);
-    caricaInterazioni(idCliente);
-}
+      document.getElementById(`loader-${idCliente}`).style.display = "block";
 
-function caricaInterazioni(idCliente) {
-    fetch(`/interazioni/${idCliente}`)
-    .then(res => res.json())
-    .then(data => {
-        const container = document.getElementById(`lista-interazioni-${idCliente}`);
-        if (!data || data.length === 0) {
+      try {
+        await caricaDocumenti(idCliente);
+        await fetch(`/files/segna-letti/${idCliente}`, { method: "POST" });
+        const btn = document.getElementById(`doc-btn-${idCliente}`);
+        if (btn) btn.innerHTML = "📎 Documenti";
+      } catch (e) {
+        console.error(e);
+      } finally {
+        document.getElementById(`loader-${idCliente}`).style.display = "none";
+      }
+    }
+
+    function uploadFile(e, idCliente) {
+      e.preventDefault();
+      const fileInput = document.getElementById(`file-${idCliente}`);
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      fetch(`/upload/${idCliente}`, {
+        method: 'POST',
+        body: formData
+      })
+        .then(res => res.json())
+        .then(() => caricaDocumenti(idCliente));
+    }
+
+    function caricaDocumenti(idCliente) {
+      return fetch(`/files/${idCliente}`)
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById(`lista-documenti-${idCliente}`);
+          if (!data || data.length === 0) {
+            container.innerHTML = "<p>Nessun documento caricato.</p>";
+            return;
+          }
+          let html = "<ul>";
+          data.forEach(doc => {
+            const stato = doc.stato === "Approvato" ? "✅" : "⏳";
+            const colore = doc.stato === "Approvato" ? "approvato" : "in-attesa";
+            html += `<li>
+              <a href="${doc.url}" target="_blank">${doc.name}</a>
+              <span class="${colore}"> ${stato} ${doc.stato}</span>
+              ${doc.stato !== "Approvato" ? `<button class="elimina-btn" onclick="eliminaFile('${doc.id}', '${idCliente}')">🗑 Elimina</button>` : ""}
+            </li>`;
+          });
+          html += "</ul>";
+          container.innerHTML = html;
+        });
+    }
+
+    function eliminaFile(idFile, idCliente) {
+      if (!confirm("Sei sicuro di voler eliminare questo file?")) return;
+      fetch(`/file/${idFile}`, { method: 'DELETE' })
+        .then(res => {
+          if (res.status === 403) {
+            alert("Il file è stato approvato e non può essere eliminato.");
+          } else {
+            caricaDocumenti(idCliente);
+          }
+        });
+    }
+
+    function mostraInterazioni(idCliente) {
+      const container = document.getElementById(`extra-${idCliente}`);
+      container.innerHTML = `
+        <div class="sezione-extra">
+          <h4>Interazioni per ${idCliente}</h4>
+          <form onsubmit="aggiungiInterazione(event, '${idCliente}')">
+            <input type="date" id="data-${idCliente}" required>
+            <select id="tipo-${idCliente}" required><option value="">Tipo...</option></select>
+            <select id="esito-${idCliente}" required><option value="">Esito...</option></select>
+            <input type="text" id="descrizione-${idCliente}" placeholder="Descrizione" required>
+            <button type="submit" class="aggiungi-inter-btn">➕ Aggiungi</button>
+          </form>
+          <div id="lista-interazioni-${idCliente}"></div>
+        </div>
+      `;
+      caricaTipiInterazione(`tipo-${idCliente}`);
+      caricaEsitiInterazione(`esito-${idCliente}`);
+      caricaInterazioni(idCliente);
+    }
+
+    function caricaInterazioni(idCliente) {
+      fetch(`/interazioni/${idCliente}`)
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById(`lista-interazioni-${idCliente}`);
+          if (!data || data.length === 0) {
             container.innerHTML = "<p>Nessuna interazione registrata.</p>";
             return;
-        }
-        // Mostriamo in tabella
-        let html = `<table><thead><tr><th>Data</th><th>Tipo</th><th>Esito</th><th>Descrizione</th></tr></thead><tbody>`;
-        data.forEach(i => {
-            html += `<tr>
-              <td>${i.Data}</td>
-              <td>${i.Tipo}</td>
-              <td>${i.Esito}</td>
-              <td>${i.Descrizione}</td>
-            </tr>`;
-        });
-        html += "</tbody></table>";
-        container.innerHTML = html;
-    });
-}
+          }
 
-function aggiungiInterazione(e, idCliente) {
-    e.preventDefault();
-    const payload = {
+          data.sort((a, b) => {
+            const parse = d => {
+              const [gg, mm, aa] = d.split("/"); return new Date(`${aa}-${mm}-${gg}`);
+            };
+            return parse(b.Data) - parse(a.Data);
+          });
+
+          let html = `
+            <table>
+              <thead><tr><th>Data</th><th>Tipo</th><th>Esito</th><th>Descrizione</th></tr></thead>
+              <tbody>
+          `;
+          data.forEach(i => {
+            html += `<tr><td>${i.Data}</td><td>${i.Tipo}</td><td>${i.Esito}</td><td>${i.Descrizione}</td></tr>`;
+          });
+          html += `</tbody></table>`;
+          container.innerHTML = html;
+        });
+    }
+
+    function aggiungiInterazione(e, idCliente) {
+      e.preventDefault();
+      const payload = {
         ID_Cliente: idCliente,
         Data: document.getElementById(`data-${idCliente}`).value,
         Tipo: document.getElementById(`tipo-${idCliente}`).value,
         Esito: document.getElementById(`esito-${idCliente}`).value,
         Descrizione: document.getElementById(`descrizione-${idCliente}`).value
-    };
-    fetch('/interazioni', {
+      };
+      fetch('/interazioni', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(() => caricaInterazioni(idCliente));
-}
-
-// =========================== DOCUMENTI ===========================
-async function mostraDocumenti(idCliente) {
-    const container = document.getElementById(`extra-${idCliente}`);
-    container.innerHTML = `
-        <div class="sezione-extra">
-          <h4>Documenti per ${idCliente}</h4>
-          <div id="loader-${idCliente}" class="loader"></div>
-          <form onsubmit="uploadFile(event, '${idCliente}')">
-                <input type="file" id="file-ID_Cliente" required>
-                <button type="submit" class="carica-btn">Carica</button>
-          </form>
-          <div id="lista-documenti-${idCliente}"></div>
-        </div>
-    `;
-
-    // Mostra messaggio di caricamento
-    document.getElementById(`loader-${idCliente}`).style.display = "block";
-
-    try {
-        await caricaDocumenti(idCliente);
-        await fetch(`/files/segna-letti/${idCliente}`, { method: "POST" });
-
-        const btn = document.getElementById(`doc-btn-${idCliente}`);
-        if (btn) btn.innerHTML = "📎 Documenti";
-    } catch (error) {
-        console.error("Errore nel caricamento documenti:", error);
-    } finally {
-        // Nasconde il messaggio di caricamento
-        document.getElementById(`loader-${idCliente}`).style.display = "none";
-    }
-}
-
-function uploadFile(e, idCliente) {
-    e.preventDefault();
-    const fileInput = document.getElementById(`file-${idCliente}`);
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
-
-    fetch(`/upload/${idCliente}`, {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(() => caricaDocumenti(idCliente));
-}
-
-    function caricaDocumenti(idCliente) {
-        fetch(`/files/${idCliente}`)
-            .then(res => res.json())
-            .then(data => {
-                const container = document.getElementById(`lista-documenti-${idCliente}`);
-                if (!data || data.length === 0) {
-                    container.innerHTML = "<p>Nessun documento caricato.</p>";
-                    return;
-                }
-
-                let html = "<ul>";
-                data.forEach(doc => {
-                    const stato = doc.stato === "Approvato" ? "✅" : "⏳";
-                    const colore = doc.stato === "Approvato" ? "approvato" : "in-attesa";
-
-                    html += `<li>
-                        <a href="${doc.url}" target="_blank">${doc.name}</a>
-                        <span class="${colore}"> ${stato} ${doc.stato}</span>
-                        ${doc.stato !== "Approvato" ? `<button class="elimina-btn" onclick="eliminaFile('${doc.id}', '${idCliente}')">🗑 Elimina</button>` : ""}
-                    </li>`;
-                });
-                html += "</ul>";
-                container.innerHTML = html;
-            });
+      })
+        .then(res => res.json())
+        .then(() => caricaInterazioni(idCliente));
     }
 
-function eliminaFile(idFile, idCliente) {
-    if (!confirm("Sei sicuro di voler eliminare questo file?")) return;
-    fetch(`/file/${idFile}`, { method: 'DELETE' })
-    .then(res => {
-        if (res.status === 403) {
-            alert("Il file è stato approvato e non può essere eliminato.");
-        } else {
-            caricaDocumenti(idCliente);
-        }
-    });
-}
-
-// =========================== MENU DINAMICI ===========================
-function caricaTipiInterazione(selectId) {
-    fetch("/tipi-interazione")
-    .then(res => res.json())
-    .then(data => {
-        const select = document.getElementById(selectId);
-        select.innerHTML = '<option value="">-- Seleziona tipo --</option>';
-        data.forEach(tipo => {
+    function caricaTipiInterazione(selectId) {
+      fetch("/tipi-interazione")
+        .then(res => res.json())
+        .then(data => {
+          const select = document.getElementById(selectId);
+          select.innerHTML = '<option value="">-- Seleziona tipo --</option>';
+          data.forEach(tipo => {
             const opt = document.createElement("option");
             opt.value = tipo;
             opt.textContent = tipo;
             select.appendChild(opt);
+          });
         });
-    });
-}
+    }
 
-function caricaEsitiInterazione(selectId) {
-    fetch("/esiti-interazione")
-    .then(res => res.json())
-    .then(data => {
-        const select = document.getElementById(selectId);
-        select.innerHTML = '<option value="">-- Seleziona esito --</option>';
-        data.forEach(esito => {
+    function caricaEsitiInterazione(selectId) {
+      fetch("/esiti-interazione")
+        .then(res => res.json())
+        .then(data => {
+          const select = document.getElementById(selectId);
+          select.innerHTML = '<option value="">-- Seleziona esito --</option>';
+          data.forEach(esito => {
             const opt = document.createElement("option");
             opt.value = esito;
             opt.textContent = esito;
             select.appendChild(opt);
+          });
         });
-    });
-}
+    }
 
-function caricaStatiCliente(selectId = "stato") {
-    fetch("/stati-cliente")
-    .then(res => res.json())
-    .then(data => {
-        const select = document.getElementById(selectId);
-        select.innerHTML = '<option value="">-- Seleziona stato --</option>';
-        data.forEach(stato => {
+    function caricaStatiCliente() {
+      fetch("/stati-cliente")
+        .then(res => res.json())
+        .then(data => {
+          const select = document.getElementById("stato");
+          select.innerHTML = '<option value="">-- Seleziona stato --</option>';
+          data.forEach(stato => {
             const opt = document.createElement("option");
             opt.value = stato;
             opt.textContent = stato;
             select.appendChild(opt);
+          });
+        });
+    }
+
+    document.getElementById("form-cliente").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const nuovoCliente = {
+        Nome: document.getElementById('nome').value,
+        Email: document.getElementById('email').value,
+        Telefono: document.getElementById('telefono').value,
+        Stato: document.getElementById('stato').value
+      };
+
+      fetch('/clienti', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nuovoCliente)
+      })
+        .then(res => res.json())
+        .then(data => {
+          caricaClienti();
+          document.getElementById("form-cliente").reset();
+          const msg = document.getElementById("messaggio-successo");
+          msg.textContent = data.message;
+          setTimeout(() => msg.textContent = "", 5000);
         });
     });
-}
 
-// =========================== AVVIO PAGINA ===========================
-window.addEventListener('DOMContentLoaded', () => {
-    caricaClienti();
-    caricaStatiCliente();
-});
-
-// =========================== verificaNotificaDocumenti ===========================
-function verificaNotificaDocumenti(idCliente) {
-  fetch(`/files/${idCliente}`)
-    .then(res => res.json())
-    .then(files => {
-      const ciSonoFileAdminNonLetti = files.some(f => f.caricato_da === "ADMIN" && f.letto_da_agente === "FALSE");
-      if (ciSonoFileAdminNonLetti) {
-        const btn = document.getElementById(`doc-btn-${idCliente}`);
-        btn.innerHTML += ' <span style="color:red;">📥</span>';
-      }
+    window.addEventListener('DOMContentLoaded', () => {
+      caricaClienti();
+      caricaStatiCliente();
     });
-}
-
-</script>
+  </script>
 </body>
 </html>

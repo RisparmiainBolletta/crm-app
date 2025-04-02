@@ -199,7 +199,12 @@
         .then(data => {
           const tbody = document.getElementById('clienti-body');
           tbody.innerHTML = '';
+    
+          const listaClienti = [];
+    
           data.forEach(cliente => {
+            listaClienti.push(cliente.ID_Cliente);
+    
             const tr = document.createElement('tr');
             tr.innerHTML = `
               <td>${cliente.ID_Cliente}</td>
@@ -211,7 +216,7 @@
               <td>${cliente.Provvigione}</td>
               <td>
                 <span class="mini-btn" onclick="mostraInterazioni('${cliente.ID_Cliente}')">📋 Interazioni</span>
-                <span class="mini-btn" onclick="mostraDocumenti('${cliente.ID_Cliente}')" id="doc-btn-${cliente.ID_Cliente}">📎 Documenti</span>
+                <span class="mini-btn" id="doc-btn-${cliente.ID_Cliente}" onclick="mostraDocumenti('${cliente.ID_Cliente}')">📎 Documenti</span>
               </td>
             `;
             tbody.appendChild(tr);
@@ -222,13 +227,12 @@
             extraCell.innerHTML = `<div id="extra-${cliente.ID_Cliente}"></div>`;
             extraRow.appendChild(extraCell);
             tbody.appendChild(extraRow);
-    
-            // ✅ Aspetta un attimo prima di modificare il DOM
-            setTimeout(() => contaDocumenti(cliente.ID_Cliente), 0);
           });
+    
+          // ✅ Ora che tutta la tabella è pronta, aggiorna i contatori documenti
+          listaClienti.forEach(id => contaDocumenti(id));
         });
     }
-
 
     function contaDocumenti(idCliente) {
       fetch(`/files/${idCliente}`)

@@ -325,33 +325,20 @@ def get_files(id_cliente):
         if 'agente' not in session:
             return jsonify({"message": "Non autenticato"}), 401
     
+        # Se log in File_Allegati = "Approvato", blocca
+        log_records = filelog_sheet.get_all_records()
+        for r in log_records:
+            if r['ID_File'] == file_id:
+                if r['Stato'].strip().lower() == "approvato":
+                    return jsonify({"message": "File approvato. Non puoi eliminarlo."}), 403
+                break
+    
+        # Elimina effettivamente su Drive
         try:
-            # Cerca il file nel foglio log
-            log_records = filelog_sheet.get_all_records()
-            for idx, r in enumerate(log_records):
-                if r['ID_File'] == file_id:
-                    stato_corrente = r.get("Stato", "").strip().lower()
-                    if stato_corrente == "approvato":
-                        return jsonify({"message": "File approvato. Non può essere eliminato."}), 403
-    
-                    # ✅ Prova a eliminare da Drive
-                    try:
-                        drive_service.files().delete(fileId=file_id).execute()
-                    except Exception as e:
-                        return jsonify({"message": "Errore durante l'eliminazione da Drive", "error": str(e)}), 500
-    
-                    # ✅ Aggiorna stato su Google Sheet
-                    riga_excel = idx + 2  # salta intestazione
-                    colonna_stato = 6     # F = 6
-                    filelog_sheet.update_cell(riga_excel, colonna_stato, "ELIMINATO")
-    
-                    return jsonify({"message": "File eliminato correttamente e stato aggiornato"}), 200
-    
-            return jsonify({"message": "File non trovato nel log"}), 404
-    
+            drive_service.files().delete(fileId=file_id).execute()
+            return jsonify({"message": "File eliminato"})
         except Exception as e:
-            return jsonify({"message": "Errore imprevisto", "error": str(e)}), 500
-
+            return jsonify({"message": "Errore durante l'eliminazione", "error": str(e)}), 500
 
 # -------------------------------------------------------------------
 #  D1) UPLOAD FILE DA ADMIN

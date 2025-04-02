@@ -121,6 +121,21 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
+
+    .carica-btn {
+        font-size: 12px;       /* Dimensione del testo più piccola */
+        padding: 5px 10px;     /* Riduzione dello spazio interno */
+        border-radius: 4px;    /* Bordi arrotondati per un aspetto moderno */
+        background-color: #3498db; /* Colore di sfondo */
+        color: white;          /* Colore del testo */
+        border: none;          /* Rimozione del bordo */
+        cursor: pointer;       /* Cambio del cursore al passaggio */
+    }
+    
+    .carica-btn:hover {
+        background-color: #2980b9; /* Colore di sfondo al passaggio del mouse */
+    }
+     
 </style>
 
 </head>
@@ -372,10 +387,11 @@ async function mostraDocumenti(idCliente) {
         <div class="sezione-extra">
           <h4>Documenti per ${idCliente}</h4>
           <div id="loader-${idCliente}" class="loader"></div>
-          <form onsubmit="uploadFile(event, '${idCliente}')">
-            <input type="file" id="file-${idCliente}" required>
-            <button type="submit">Carica</button>
+          <form onsubmit="uploadFile(event, 'ID_Cliente')">
+                <input type="file" id="file-ID_Cliente" required>
+                <button type="submit" class="carica-btn">Carica</button>
           </form>
+
           <div id="lista-documenti-${idCliente}"></div>
         </div>
     `;

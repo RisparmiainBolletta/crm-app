@@ -260,21 +260,32 @@ function aggiungiInterazione(e, idCliente) {
 }
 
 // =========================== DOCUMENTI ===========================
-function mostraDocumenti(idCliente) {
-    const container = document.getElementById(`extra-${idCliente}`);
-    container.innerHTML = `
-      <div class="sezione-extra">
-        <h4>Documenti per ${idCliente}</h4>
-        <form onsubmit="uploadFile(event, '${idCliente}')">
-          <input type="file" id="file-${idCliente}" required>
-          <button type="submit">Carica</button>
-        </form>
-        <div id="lista-documenti-${idCliente}"></div>
-      </div>
+    async function mostraDocumenti(idCliente) {
+        const container = document.getElementById(`extra-${idCliente}`);
+        container.innerHTML = `
+        <div class="sezione-extra">
+          <h4>Documenti per ${idCliente}</h4>
+          <form onsubmit="uploadFile(event, '${idCliente}')">
+            <input type="file" id="file-${idCliente}" required>
+            <button type="submit">Carica</button>
+          </form>
+          <div id="lista-documenti-${idCliente}"></div>
+        </div>
     `;
-    fetch(`/files/segna-letti/${idCliente}`, { method: "POST" });
-    caricaDocumenti(idCliente);
-}
+
+        // ✅ PRIMA carica i documenti
+        await caricaDocumenti(idCliente);
+
+        // ✅ POI segna come letti i file non ancora letti
+        await fetch(`/files/segna-letti/${idCliente}`, { method: "POST" });
+
+        // ✅ Aggiorna icona
+        const docBtn = document.getElementById(`doc-btn-${idCliente}`);
+        if (docBtn) {
+            docBtn.innerHTML = "📎 Documenti";
+        }
+    }
+
 
 function uploadFile(e, idCliente) {
     e.preventDefault();

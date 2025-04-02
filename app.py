@@ -425,7 +425,7 @@ def admin_upload_file(id_cliente):
             data_oggi,
             "In attesa",
             "ADMIN",
-            "false"
+            "FALSE"
         ])
     except Exception as e:
         return jsonify({"message": "File caricato, ma errore nel log", "error": str(e)}), 500
@@ -471,12 +471,19 @@ def segna_letti_da_agente(id_cliente):
     if 'agente' not in session:
         return jsonify({"message": "Non autenticato"}), 401
 
+    codice_agente = session['agente']
     log_records = filelog_sheet.get_all_records()
+
     for idx, row in enumerate(log_records):
-        if row["ID_Cliente"] == id_cliente and row["Caricato_da"] == "ADMIN" and row["Letto_da_Agente"] != "TRUE":
-            riga_excel = idx + 2  # +2 = intestazione + base 1
-            filelog_sheet.update(f"H{riga_excel}", "TRUE")
-    return jsonify({"message": "Aggiornati i file come letti"})
+        if (row.get("ID_Cliente") == id_cliente and
+            row.get("Caricato_da") == "ADMIN" and
+            row.get("Letto_da_Agente", "").strip().upper() != "TRUE" and
+            row.get("ID_Agente") == codice_agente):
+
+            riga_excel = idx + 2
+            filelog_sheet.update(f"H{riga_excel}", "TRUE")  # colonna H = Letto_da_Agente
+
+    return jsonify({"message": "Aggiornamento completato"})
 
 
 # -------------------------------------------------------------------

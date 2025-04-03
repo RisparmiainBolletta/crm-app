@@ -178,6 +178,8 @@
     <input type="text" placeholder="Nome" id="nome" required>
     <input type="email" placeholder="Email" id="email" required>
     <input type="text" placeholder="Telefono" id="telefono" required>
+    <input type="text" placeholder="Città" id="citta" required>
+    <input type="text" placeholder="Provincia" id="provincia" required>
     <select id="stato" required>
       <option value="">-- Caricamento stati... --</option>
     </select>
@@ -194,6 +196,8 @@
         <th>Nome</th>
         <th>Email</th>
         <th>Telefono</th>
+        <th>Città</th>
+        <th>Provincia</th>
         <th>Agente</th>
         <th>Stato</th>
         <th>Provvigione</th>
@@ -227,6 +231,8 @@ function caricaClienti() {
               <td>${cliente.Nome} ${iconaNotifica}</td>
               <td>${cliente.Email}</td>
               <td>${cliente.Telefono}</td>
+              <td>${cliente.Città}</td>
+              <td>${cliente.Provincia}</td>
               <td>${cliente.Agente}</td>
               <td>${cliente.Stato}</td>
               <td>${cliente.Provvigione}</td>
@@ -484,6 +490,8 @@ function caricaClienti() {
               Nome: document.getElementById(`mod-nome-${idCliente}`).value,
               Email: document.getElementById(`mod-email-${idCliente}`).value,
               Telefono: document.getElementById(`mod-telefono-${idCliente}`).value,
+              Città: document.getElementById(`mod-citta-${idCliente}`).value,
+              Provincia: document.getElementById(`mod-provincia-${idCliente}`).value,
               Stato: document.getElementById(`mod-stato-${idCliente}`).value
           };
 
@@ -506,6 +514,8 @@ function caricaClienti() {
         Nome: document.getElementById('nome').value,
         Email: document.getElementById('email').value,
         Telefono: document.getElementById('telefono').value,
+        Città: document.getElementById('citta').value,
+        Provincia: document.getElementById('provincia').value,
         Stato: document.getElementById('stato').value
       };
 
@@ -554,6 +564,8 @@ function caricaClienti() {
             <input type="text" id="mod-nome-${idCliente}" value="${cliente.Nome}" required>
             <input type="email" id="mod-email-${idCliente}" value="${cliente.Email}" required>
             <input type="text" id="mod-telefono-${idCliente}" value="${cliente.Telefono}" required>
+            <input type="text" id="mod-citta-${idCliente}" value="${cliente.Città}" required>
+            <input type="text" id="mod-provincia-${idCliente}" value="${cliente.Provincia}" required>
             <select id="mod-stato-${idCliente}" required>
               <option value="">-- Seleziona stato --</option>
             </select>

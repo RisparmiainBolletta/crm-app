@@ -485,26 +485,10 @@ function caricaClienti() {
         });
     });
 
-    window.addEventListener("DOMContentLoaded", () => {
-      caricaDatiAgente();
+    window.addEventListener('DOMContentLoaded', () => {
       caricaClienti();
       caricaStatiCliente();
     });
-
-    function caricaStatiCliente() {
-      fetch("/stati-cliente")
-        .then(res => res.json())
-        .then(data => {
-          const select = document.getElementById("stato");
-          select.innerHTML = '<option value="">-- Seleziona stato --</option>';
-          data.forEach(stato => {
-            const opt = document.createElement("option");
-            opt.value = stato;
-            opt.textContent = stato;
-            select.appendChild(opt);
-          });
-        });
-    }
   </script>
 </body>
 </html>

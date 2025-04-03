@@ -351,6 +351,22 @@ def delete_file(file_id):
     except Exception as e:
         return jsonify({"message": "Errore imprevisto", "error": str(e)}), 500
 
+    @app.route("/conteggio-documenti", methods=["GET"])
+    def conteggio_documenti():
+        if 'agente' not in session:
+            return jsonify({"message": "Non autenticato"}), 401
+    
+        log_records = filelog_sheet.get_all_records()
+        conteggi = {}
+    
+        for r in log_records:
+            id_cliente = r.get("ID_Cliente", "").strip()
+            stato = r.get("Stato", "").strip().upper()
+            if id_cliente and stato != "ELIMINATO":
+                conteggi[id_cliente] = conteggi.get(id_cliente, 0) + 1
+    
+        return jsonify(conteggi)
+
 
 # -------------------------------------------------------------------
 #  D1) UPLOAD FILE DA ADMIN

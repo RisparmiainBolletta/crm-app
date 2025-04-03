@@ -351,7 +351,7 @@ def delete_file(file_id):
     except Exception as e:
         return jsonify({"message": "Errore imprevisto", "error": str(e)}), 500
 
-    @app.route("/conteggio-documenti", methods=["GET"])
+@app.route("/conteggio-documenti", methods=["GET"])
     def conteggio_documenti():
         if 'agente' not in session:
             return jsonify({"message": "Non autenticato"}), 401

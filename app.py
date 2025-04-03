@@ -82,19 +82,21 @@ def logout():
 # -------------------------------------------------------------------
 #  B) GESTIONE INFO AGENTE
 # -------------------------------------------------------------------
-@app.route("/info-agente", methods=["GET"])
-def info_agente():
-    if 'agente' not in session:
+@app.route("/agente-loggato")
+def agente_loggato():
+    codice = session.get('agente')
+    if not codice:
         return jsonify({"message": "Non autenticato"}), 401
 
-    codice = session['agente']
     agenti = agenti_sheet.get_all_records()
-    for a in agenti:
-        if a.get("Codice_Agente") == codice:
-            nome = a.get("Nome", "Agente")
-            return jsonify({"nome": nome, "codice": codice})
-    return jsonify({"nome": "Agente", "codice": codice})
+    agente = next((a for a in agenti if a["Codice_Agente"] == codice), None)
+    if not agente:
+        return jsonify({"message": "Agente non trovato"}), 404
 
+    return jsonify({
+        "codice": codice,
+        "nome": agente["Nome"]
+    })
 
 # -------------------------------------------------------------------
 #  B) GESTIONE CLIENTI

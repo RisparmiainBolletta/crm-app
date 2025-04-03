@@ -367,6 +367,26 @@ def conteggio_documenti():
             conteggi[id_cliente] = conteggi.get(id_cliente, 0) + 1
 
     return jsonify(conteggi)
+
+@app.route("/notifiche-non-letto", methods=["GET"])
+def notifiche_non_lette():
+    if 'agente' not in session:
+        return jsonify({"message": "Non autenticato"}), 401
+
+    agente = session['agente']
+    log_records = filelog_sheet.get_all_records()
+    clienti_con_notifiche = set()
+
+    for r in log_records:
+        if (
+            r.get("ID_Agente") == agente and
+            r.get("Caricato_da", "").strip().upper() == "ADMIN" and
+            r.get("Letto_da_Agente", "").strip().upper() != "TRUE"
+        ):
+            clienti_con_notifiche.add(r.get("ID_Cliente"))
+
+    return jsonify(list(clienti_con_notifiche))
+
 # -------------------------------------------------------------------
 #  D1) UPLOAD FILE DA ADMIN
 # -------------------------------------------------------------------

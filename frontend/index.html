@@ -291,7 +291,7 @@
     }
 
     function caricaDocumenti(idCliente) {
-      return fetch(`/files/${idCliente}`)
+      fetch(`/files/${idCliente}`)
         .then(res => res.json())
         .then(data => {
           const container = document.getElementById(`lista-documenti-${idCliente}`);
@@ -299,16 +299,23 @@
             container.innerHTML = "<p>Nessun documento caricato.</p>";
             return;
           }
+    
           let html = "<ul>";
           data.forEach(doc => {
-            const stato = doc.stato === "Approvato" ? "✅" : "⏳";
-            const colore = doc.stato === "Approvato" ? "approvato" : "in-attesa";
+            const stato = doc.stato === "Approvato" ? "✅" :
+                          doc.stato === "ELIMINATO" ? "❌" : "⏳";
+    
+            const colore = doc.stato === "Approvato" ? "approvato" :
+                           doc.stato === "ELIMINATO" ? "in-attesa" : "in-attesa";
+    
             html += `<li>
               <a href="${doc.url}" target="_blank">${doc.name}</a>
               <span class="${colore}"> ${stato} ${doc.stato}</span>
-              ${doc.stato !== "Approvato" ? `<button class="elimina-btn" onclick="eliminaFile('${doc.id}', '${idCliente}')">🗑 Elimina</button>` : ""}
+              ${doc.stato !== "Approvato" && doc.stato !== "ELIMINATO" ? 
+                `<button class="elimina-btn" onclick="eliminaFile('${doc.id}', '${idCliente}')">🗑</button>` : ""}
             </li>`;
           });
+    
           html += "</ul>";
           container.innerHTML = html;
         });
@@ -316,15 +323,15 @@
 
     function eliminaFile(idFile, idCliente) {
       if (!confirm("Sei sicuro di voler eliminare questo file?")) return;
+    
       fetch(`/file/${idFile}`, { method: 'DELETE' })
-        .then(res => {
-          if (res.status === 403) {
-            alert("Il file è stato approvato e non può essere eliminato.");
-          } else {
-            caricaDocumenti(idCliente);
-          }
+        .then(res => res.json())
+        .then(data => {
+          console.log(data.message);
+          caricaDocumenti(idCliente);
         });
     }
+
 
     function mostraInterazioni(idCliente) {
       const container = document.getElementById(`extra-${idCliente}`);

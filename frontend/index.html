@@ -193,47 +193,55 @@
       window.location.href = "/logout";
     }
 
-    function caricaClienti() {
-      fetch('/clienti')
-        .then(res => res.json())
-        .then(data => {
-          const tbody = document.getElementById('clienti-body');
-          tbody.innerHTML = '';
-    
-          const listaClienti = [];
-    
-          data.forEach(cliente => {
-            listaClienti.push(cliente.ID_Cliente);
-    
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${cliente.ID_Cliente}</td>
-              <td>${cliente.Nome}</td>
-              <td>${cliente.Email}</td>
-              <td>${cliente.Telefono}</td>
-              <td>${cliente.Agente}</td>
-              <td>${cliente.Stato}</td>
-              <td>${cliente.Provvigione}</td>
-              <td>
-                <span class="mini-btn" onclick="mostraInterazioni('${cliente.ID_Cliente}')">📋 Interazioni</span>
-                <span class="mini-btn" id="doc-btn-${cliente.ID_Cliente}" onclick="mostraDocumenti('${cliente.ID_Cliente}')">📎 Documenti</span>
-              </td>
-            `;
-            tbody.appendChild(tr);
-    
-            const extraRow = document.createElement('tr');
-            const extraCell = document.createElement('td');
-            extraCell.colSpan = 8;
-            extraCell.innerHTML = `<div id="extra-${cliente.ID_Cliente}"></div>`;
-            extraRow.appendChild(extraCell);
-            tbody.appendChild(extraRow);
-          });
-    
-          // ✅ Ora che tutta la tabella è pronta, aggiorna i contatori documenti
-          listaClienti.forEach(id => contaDocumenti(id));
+  function caricaClienti() {
+    fetch('/clienti')
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.getElementById('clienti-body');
+        tbody.innerHTML = '';
+        data.forEach(cliente => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${cliente.ID_Cliente}</td>
+            <td>${cliente.Nome}</td>
+            <td>${cliente.Email}</td>
+            <td>${cliente.Telefono}</td>
+            <td>${cliente.Agente}</td>
+            <td>${cliente.Stato}</td>
+            <td>${cliente.Provvigione}</td>
+            <td>
+              <span class="mini-btn" onclick="mostraInterazioni('${cliente.ID_Cliente}')">📋 Interazioni</span>
+              <span class="mini-btn" id="doc-btn-${cliente.ID_Cliente}" onclick="mostraDocumenti('${cliente.ID_Cliente}')">📎 Documenti</span>
+            </td>
+          `;
+          tbody.appendChild(tr);
+  
+          const extraRow = document.createElement('tr');
+          const extraCell = document.createElement('td');
+          extraCell.colSpan = 8;
+          extraCell.innerHTML = `<div id="extra-${cliente.ID_Cliente}"></div>`;
+          extraRow.appendChild(extraCell);
+          tbody.appendChild(extraRow);
         });
-    }
+  
+        aggiornaConteggioDocumenti();  // ⬅️ Aggiunto qui
+      });
+  }
 
+  function aggiornaConteggioDocumenti() {
+    fetch("/conteggio-documenti")
+      .then(res => res.json())
+      .then(conteggi => {
+        Object.entries(conteggi).forEach(([idCliente, numero]) => {
+          const btn = document.getElementById(`doc-btn-${idCliente}`);
+          if (btn) {
+            btn.innerHTML = `📎 Documenti (${numero})`;
+          }
+        });
+      });
+  }
+
+    
     function contaDocumenti(idCliente) {
       fetch(`/files/${idCliente}`)
         .then(res => res.json())

@@ -79,6 +79,22 @@ def logout():
     session.pop('agente', None)
     return redirect("/")
 
+# -------- NOME AGENTE ---------------
+@app.route("/dati-agente", methods=["GET"])
+def dati_agente():
+    if 'agente' not in session:
+        return jsonify({"message": "Non autenticato"}), 401
+
+    codice = session['agente']
+    agenti = agenti_sheet.get_all_records()
+    for agente in agenti:
+        if agente['Codice_Agente'] == codice:
+            return jsonify({
+                "nome_completo": agente.get("Nome", ""),
+                "codice": codice
+            })
+    return jsonify({"message": "Agente non trovato"}), 404
+
 # -------------------------------------------------------------------
 #  B) GESTIONE CLIENTI
 # -------------------------------------------------------------------

@@ -233,6 +233,7 @@ function caricaClienti() {
               <td>
                 <span class="mini-btn" onclick="mostraInterazioni('${cliente.ID_Cliente}')">📋 Interazioni</span>
                 <span class="mini-btn" onclick="mostraDocumenti('${cliente.ID_Cliente}')" id="doc-btn-${cliente.ID_Cliente}">📎 Documenti</span>
+                <span class="mini-btn" onclick="modificaCliente('${cliente.ID_Cliente}')">✏️ Modifica</span>
               </td>
             `;
             tbody.appendChild(tr);
@@ -461,20 +462,43 @@ function caricaClienti() {
         });
     }
 
-    function caricaStatiCliente() {
-      fetch("/stati-cliente")
+    function caricaStatiCliente(selectId = "stato", valoreSelezionato = "") {
+       fetch("/stati-cliente")
         .then(res => res.json())
         .then(data => {
-          const select = document.getElementById("stato");
+          const select = document.getElementById(selectId);
           select.innerHTML = '<option value="">-- Seleziona stato --</option>';
           data.forEach(stato => {
-            const opt = document.createElement("option");
-            opt.value = stato;
-            opt.textContent = stato;
-            select.appendChild(opt);
+             const opt = document.createElement("option");
+             opt.value = stato;
+             opt.textContent = stato;
+             if (stato === valoreSelezionato) opt.selected = true;
+             select.appendChild(opt);
           });
         });
     }
+
+      function salvaModificaCliente(e, idCliente) {
+          e.preventDefault();
+          const payload = {
+              Nome: document.getElementById(`mod-nome-${idCliente}`).value,
+              Email: document.getElementById(`mod-email-${idCliente}`).value,
+              Telefono: document.getElementById(`mod-telefono-${idCliente}`).value,
+              Stato: document.getElementById(`mod-stato-${idCliente}`).value
+          };
+
+          fetch(`/clienti/${idCliente}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+          })
+              .then(res => res.json())
+              .then(data => {
+                  alert(data.message);
+                  caricaClienti();
+              });
+      }
+
 
     document.getElementById("form-cliente").addEventListener("submit", function (e) {
       e.preventDefault();
@@ -514,6 +538,33 @@ function caricaClienti() {
           document.getElementById("nome-agente").textContent = `${nomeCompleto} - ${codice}`;
         });
     }
+
+      function modificaCliente(idCliente) {
+          const container = document.getElementById(`extra-${idCliente}`);
+          fetch('/clienti')
+              .then(res => res.json())
+              .then(clienti => {
+                  const cliente = clienti.find(c => c.ID_Cliente === idCliente);
+                  if (!cliente) return;
+
+                  container.innerHTML = `
+        <div class="sezione-extra">
+          <h4>Modifica Cliente ${idCliente}</h4>
+          <form onsubmit="salvaModificaCliente(event, '${idCliente}')">
+            <input type="text" id="mod-nome-${idCliente}" value="${cliente.Nome}" required>
+            <input type="email" id="mod-email-${idCliente}" value="${cliente.Email}" required>
+            <input type="text" id="mod-telefono-${idCliente}" value="${cliente.Telefono}" required>
+            <select id="mod-stato-${idCliente}" required>
+              <option value="">-- Seleziona stato --</option>
+            </select>
+            <button type="submit">💾 Salva</button>
+          </form>
+        </div>
+      `;
+
+                  caricaStatiCliente(`mod-stato-${idCliente}`, cliente.Stato);
+              });
+      }
 
   </script>
 </body>

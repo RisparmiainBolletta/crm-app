@@ -135,6 +135,8 @@ def add_cliente():
         data.get("Nome"),           # B: Nome
         data.get("Email"),          # C: Email
         data.get("Telefono"),       # D: Telefono
+        data.get("Città"),          # E: Città
+        data.get("Provincia"),      # F: Provincia
         codice_agente,              # E: Agente
         data.get("Stato"),          # F: Stato
         ""                          # G: Provvigione (gestita dal foglio)
@@ -156,7 +158,9 @@ def aggiorna_cliente(id_cliente):
             clienti_sheet.update(f"B{riga_excel}", [[data["Nome"]]])
             clienti_sheet.update(f"C{riga_excel}", [[data["Email"]]])
             clienti_sheet.update(f"D{riga_excel}", [[data["Telefono"]]])
-            clienti_sheet.update(f"F{riga_excel}", [[data["Stato"]]])
+            clienti_sheet.update(f"E{riga_excel}", [[data["Città"]]])
+            clienti_sheet.update(f"F{riga_excel}", [[data["Provincia"]]])
+            clienti_sheet.update(f"H{riga_excel}", [[data["Stato"]]])
             return jsonify({"message": "Cliente aggiornato correttamente"}), 200
 
     return jsonify({"message": "Cliente non trovato"}), 404

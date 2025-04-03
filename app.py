@@ -90,7 +90,7 @@ def dati_agente():
     for agente in agenti:
         if agente['Codice_Agente'] == codice:
             return jsonify({
-                "Nome": agente.get("Nome", ""),
+                "nome_completo": agente.get("Nome", ""),
                 "codice": codice
             })
     return jsonify({"message": "Agente non trovato"}), 404

@@ -149,12 +149,27 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    .intestazione-agente {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .logo-header {
+        height: 40px; /* Altezza ridotta per stare nella riga */
+        width: auto;
+    }
+
   </style>
 </head>
 <body>
 
   <header>
-    <h2>Benvenuto, <span id="nome-agente">Agente</span></h2>
+    <div class="intestazione-agente">
+      <img src="logo.png" alt="Logo" class="logo-header">
+      <h2>Benvenuto, <span id="nome-agente">Agente</span></h2>
+    </div>
     <button class="logout" onclick="logout()">Logout</button>
   </header>
 

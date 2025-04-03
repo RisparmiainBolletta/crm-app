@@ -154,7 +154,7 @@
 <body>
 
   <header>
-    <h2>Benvenuto, <span id="nome-agente">Agente</span></h2>
+    <h2>Benvenuto, <span id="Nome">Agente</span></h2>
     <button class="logout" onclick="logout()">Logout</button>
   </header>
 
@@ -488,7 +488,18 @@ function caricaClienti() {
     window.addEventListener('DOMContentLoaded', () => {
       caricaClienti();
       caricaStatiCliente();
+      mostraDatiAgente();
     });
+    function mostraDatiAgente() {
+      fetch("/dati-agente")
+        .then(res => res.json())
+        .then(data => {
+          const nomeCompleto = data.nome_completo || "Agente";
+          const codice = data.codice || "";
+          document.getElementById("nome-agente").textContent = `${nomeCompleto} - ${codice}`;
+        });
+    }
+
   </script>
 </body>
 </html>

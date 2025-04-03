@@ -202,6 +202,7 @@ function caricaClienti() {
         .then(notifiche => {
           const tbody = document.getElementById('clienti-body');
           tbody.innerHTML = '';
+
           clienti.forEach(cliente => {
             const haNotifica = notifiche.includes(cliente.ID_Cliente);
             const iconaNotifica = haNotifica ? '🔔' : '';
@@ -227,11 +228,12 @@ function caricaClienti() {
             extraCell.innerHTML = `<div id="extra-${cliente.ID_Cliente}"></div>`;
             extraRow.appendChild(extraCell);
             tbody.appendChild(extraRow);
+          });
+
+          aggiornaConteggioDocumenti(); // ✅ Una sola chiamata alla fine
         });
-  
-        aggiornaConteggioDocumenti();  // ⬅️ Aggiunto qui
-      });
-  }
+    });
+}
 
   function aggiornaConteggioDocumenti() {
     fetch("/conteggio-documenti")

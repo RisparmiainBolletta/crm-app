@@ -320,25 +320,37 @@ def get_files(id_cliente):
 
     return jsonify(file_links)
 
-    @app.route("/file/<file_id>", methods=["DELETE"])
-    def delete_file(file_id):
-        if 'agente' not in session:
-            return jsonify({"message": "Non autenticato"}), 401
-    
-        # Se log in File_Allegati = "Approvato", blocca
+@app.route("/file/<file_id>", methods=["DELETE"])
+def delete_file(file_id):
+    if 'agente' not in session:
+        return jsonify({"message": "Non autenticato"}), 401
+
+    try:
         log_records = filelog_sheet.get_all_records()
-        for r in log_records:
+        for idx, r in enumerate(log_records):
             if r['ID_File'].strip() == file_id.strip():
-                if r['Stato'].strip().lower() == "approvato":
-                    return jsonify({"message": "File approvato. Non puoi eliminarlo."}), 403
-                break
-    
-        # Elimina effettivamente su Drive
-        try:
-            drive_service.files().delete(fileId=file_id).execute()
-            return jsonify({"message": "File eliminato"})
-        except Exception as e:
-            return jsonify({"message": "Errore durante l'eliminazione", "error": str(e)}), 500
+                stato_corrente = r.get("Stato", "").strip().lower()
+                if stato_corrente == "approvato":
+                    return jsonify({"message": "File approvato. Non può essere eliminato."}), 403
+
+                # ✅ Elimina da Drive
+                try:
+                    drive_service.files().delete(fileId=file_id).execute()
+                except Exception as e:
+                    return jsonify({"message": "Errore durante l'eliminazione da Drive", "error": str(e)}), 500
+
+                # ✅ Aggiorna colonna "Stato" con "ELIMINATO"
+                riga_excel = idx + 2  # intestazione + base 1
+                colonna_stato = 6     # colonna F
+                filelog_sheet.update_cell(riga_excel, colonna_stato, "ELIMINATO")
+
+                return jsonify({"message": "File eliminato e stato aggiornato"}), 200
+
+        return jsonify({"message": "File non trovato nel log"}), 404
+
+    except Exception as e:
+        return jsonify({"message": "Errore imprevisto", "error": str(e)}), 500
+
 
 # -------------------------------------------------------------------
 #  D1) UPLOAD FILE DA ADMIN

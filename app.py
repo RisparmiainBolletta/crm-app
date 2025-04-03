@@ -328,7 +328,7 @@ def get_files(id_cliente):
         # Se log in File_Allegati = "Approvato", blocca
         log_records = filelog_sheet.get_all_records()
         for r in log_records:
-            if r['ID_File'] == file_id:
+            if r['ID_File'].strip() == file_id.strip():
                 if r['Stato'].strip().lower() == "approvato":
                     return jsonify({"message": "File approvato. Non puoi eliminarlo."}), 403
                 break

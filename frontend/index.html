@@ -166,9 +166,37 @@
         border-radius: 4px;
         border: 1px solid #ccc;
         font-size: 12px;
+        width: 450px;
+    }
+    .campo-email {
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        font-size: 12px;
         width: 250px;
     }
-
+    .campo-telefono {
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        font-size: 12px;
+        width: 150px;
+    }
+    .campo-citta {
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        font-size: 12px;
+        width: 250px;
+    }
+    .campo-provincia {
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        font-size: 12px;
+        width: 100px;
+    }
+    
   </style>
 </head>
 <body>
@@ -184,10 +212,10 @@
   <h3>Aggiungi nuovo cliente</h3>
   <form id="form-cliente">
     <input type="text" placeholder="Nome" id="nome" class="campo-nome" required>
-    <input type="email" placeholder="Email" id="email" required>
-    <input type="text" placeholder="Telefono" id="telefono" required>
-    <input type="text" placeholder="Città" id="citta" required>
-    <input type="text" placeholder="Provincia" id="provincia" required>
+    <input type="email" placeholder="Email" id="email" class="campo-email" required>
+    <input type="text" placeholder="Telefono" id="telefono" class="campo-telefono" required>
+    <input type="text" placeholder="Città" id="citta" class="campo-citta" required>
+    <input type="text" placeholder="Provincia" id="provincia" class="campo-provincia" required>
     <select id="stato" required>
       <option value="">-- Caricamento stati... --</option>
     </select>

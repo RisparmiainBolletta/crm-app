@@ -117,14 +117,14 @@
     .aggiungi-inter-btn:hover { background-color: #732d91; }
 
     .sezione-extra {
-      margin: 10px 0 30px 0;
-      background: #DEDEDE;
-      padding: 15px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      max-width: 100%;
-      width: 95%;
+      margin: 10px 0 30px 0;                     /* spazio sopra 5px), sotto (15px) */
+      background: #DEDEDE;                       /* colore di sfondo grigio chiaro */
+      padding: 15px;                             /* spazio interno al box */
+      border: 1px solid #ddd;                    /* bordo grigio chiaro */
+      border-radius: 6px;                        /* angoli arrotondati */
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);     /* leggero effetto ombra */
+      max-width: 100%;                           /* mai superare la larghezza del contenitore */
+      width: 95%;                                /* usa il 95% della larghezza disponibile */
     }
 
     .mini-btn {
@@ -292,7 +292,10 @@ function caricaClienti() {
             const extraRow = document.createElement('tr');
             const extraCell = document.createElement('td');
             extraCell.colSpan = 8;
-            extraCell.innerHTML = `<div id="extra-${cliente.ID_Cliente}"></div>`;
+            extraCell.style.padding = '0';
+            extraCell.style.width = '100%';
+            //*extraCell.innerHTML = `<div id="extra-${cliente.ID_Cliente}"></div>`;
+            extraCell.innerHTML = `<div class="sezione-extra" style="width: 100%"></div>`;
             extraRow.appendChild(extraCell);
             tbody.appendChild(extraRow);
           });

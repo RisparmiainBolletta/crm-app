@@ -255,6 +255,28 @@
         display: none;
       }
 
+      td .mini-btn {
+        display: inline-block;
+        margin-right: 6px;
+        white-space: nowrap;
+        padding: 6px 10px;
+        font-size: 13px;
+        border-radius: 4px;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      
+      td .mini-btn:hover {
+        background-color: #0056b3;
+      }
+      .bottoni-azione {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+    
   </style>
 </head>
 <body>
@@ -331,9 +353,11 @@ function caricaClienti() {
               <td>${cliente.Stato}</td>
               <td>${cliente.Provvigione}</td>
               <td>
-                <span class="mini-btn" onclick="mostraInterazioni('${cliente.ID_Cliente}')">📋</span>
-                <span class="mini-btn" onclick="mostraDocumenti('${cliente.ID_Cliente}')" id="doc-btn-${cliente.ID_Cliente}">📎</span>
-                <span class="mini-btn" onclick="modificaCliente('${cliente.ID_Cliente}')">✏️</span>
+                <div class="bottoni-azione">
+                  <span class="mini-btn" onclick="mostraInterazioni('${cliente.ID_Cliente}')">📋</span>
+                  <span class="mini-btn" onclick="mostraDocumenti('${cliente.ID_Cliente}')" id="doc-btn-${cliente.ID_Cliente}">📎</span>
+                  <span class="mini-btn" onclick="modificaCliente('${cliente.ID_Cliente}')">✏️</span>
+                </div>
               </td>
             `;
             tbody.appendChild(tr);

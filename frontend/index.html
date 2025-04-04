@@ -294,8 +294,8 @@ function caricaClienti() {
             extraCell.colSpan = 8;
             extraCell.style.padding = '0';
             extraCell.style.width = '100%';
-            extraCell.innerHTML = `<div id="extra-${cliente.ID_Cliente}" class="sezione-extra" style="width: 100%"></div>`;
-            //extraCell.innerHTML = `<div id="extra-${cliente.ID_Cliente}"></div>`;
+            //extraCell.innerHTML = `<div id="extra-${cliente.ID_Cliente}" class="sezione-extra" style="width: 100%"></div>`;
+            extraCell.innerHTML = `<div id="extra-${cliente.ID_Cliente}"></div>`;
             //extraCell.innerHTML = `<div class="sezione-extra" style="width: 100%"></div>`;
             extraRow.appendChild(extraCell);
             tbody.appendChild(extraRow);

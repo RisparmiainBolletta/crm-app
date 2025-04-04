@@ -375,7 +375,7 @@ function caricaClienti() {
         .then(data => {
           const btn = document.getElementById(`doc-btn-${idCliente}`);
           if (btn) {
-            btn.innerHTML = `📎 Documenti (${data.length})`;
+            btn.innerHTML = `📎 (${data.length})`;
             if (data.some(f => f.stato === "In attesa")) {
               btn.innerHTML += ' 🔔';
             }

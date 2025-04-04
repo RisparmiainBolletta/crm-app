@@ -205,7 +205,56 @@
         font-size: 12px;
         width: 200px;
     }
-    
+
+    .tabella-clienti {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        font-size: 15px;
+        background-color: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+      
+      .tabella-clienti th {
+        background-color: #004080;
+        color: #fff;
+        font-weight: bold;
+        padding: 10px 12px;
+        text-align: left;
+      }
+      
+      .tabella-clienti td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #eee;
+      }
+      
+      .tabella-clienti tr:hover {
+        background-color: #f3f9ff;
+      }
+      
+      .tabella-clienti td button,
+      .tabella-clienti td .mini-btn {
+        padding: 6px 10px;
+        font-size: 13px;
+        margin: 0 4px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        transition: background-color 0.3s;
+      }
+      
+      .tabella-clienti td .mini-btn:hover {
+        background-color: #0056b3;
+      }
+      .tabella-clienti th:nth-child(5),
+      .tabella-clienti td:nth-child(5) {
+        display: none;
+      }
+
   </style>
 </head>
 <body>
@@ -234,7 +283,7 @@
   <p id="messaggio-successo" style="color: green; font-weight: bold;"></p>
 
   <h3>Lista Clienti</h3>
-  <table>
+  <table class="tabella-clienti">
     <thead>
       <tr>
         <th>ID</th>
@@ -243,7 +292,7 @@
         <th>Telefono</th>
         <th>Città</th>
         <th>Provincia</th> 
-        <!--<th>Agente</th> <!-- NASCOSTO -->
+        <th>Agente</th>
         <th>Stato</th>
         <th>Provvigione</th>
         <th>Azioni</th>
@@ -278,7 +327,7 @@ function caricaClienti() {
               <td>${cliente.Telefono}</td>
               <td>${cliente.Città}</td>
               <td>${cliente.Provincia}</td>
-              <!--<td>${cliente.Agente}</td> <!-- NASCOSTO -->
+              <td>${cliente.Agente}</td>
               <td>${cliente.Stato}</td>
               <td>${cliente.Provvigione}</td>
               <td>

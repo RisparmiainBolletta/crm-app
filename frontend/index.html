@@ -250,8 +250,8 @@
       .tabella-clienti td .mini-btn:hover {
         background-color: #0056b3;
       }
-      .tabella-clienti th:nth-child(5),
-      .tabella-clienti td:nth-child(5) {
+      .tabella-clienti th:nth-child(7),
+      .tabella-clienti td:nth-child(7) {
         display: none;
       }
 
@@ -331,9 +331,9 @@ function caricaClienti() {
               <td>${cliente.Stato}</td>
               <td>${cliente.Provvigione}</td>
               <td>
-                <span class="mini-btn" onclick="mostraInterazioni('${cliente.ID_Cliente}')">📋 Interazioni</span>
-                <span class="mini-btn" onclick="mostraDocumenti('${cliente.ID_Cliente}')" id="doc-btn-${cliente.ID_Cliente}">📎 Documenti</span>
-                <span class="mini-btn" onclick="modificaCliente('${cliente.ID_Cliente}')">✏️ Modifica</span>
+                <span class="mini-btn" onclick="mostraInterazioni('${cliente.ID_Cliente}')">📋</span> <!-- 📋 Interazioni</span> -->
+                <span class="mini-btn" onclick="mostraDocumenti('${cliente.ID_Cliente}')" id="doc-btn-${cliente.ID_Cliente}">📎</span> <!-- 📎 Documenti</span> --->
+                <span class="mini-btn" onclick="modificaCliente('${cliente.ID_Cliente}')">✏️</span> <!-- ✏️ Modifica</span> -->
               </td>
             `;
             tbody.appendChild(tr);

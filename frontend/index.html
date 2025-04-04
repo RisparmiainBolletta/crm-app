@@ -604,12 +604,12 @@ function caricaClienti() {
         <div class="sezione-extra">
           <h4>Modifica Cliente ${idCliente}</h4>
           <form onsubmit="salvaModificaCliente(event, '${idCliente}')">
-            <input type="text" id="mod-nome-${idCliente}" value="${cliente.Nome}" required>
-            <input type="email" id="mod-email-${idCliente}" value="${cliente.Email}" required>
-            <input type="text" id="mod-telefono-${idCliente}" value="${cliente.Telefono}" required>
-            <input type="text" id="mod-citta-${idCliente}" value="${cliente.Città}" required>
-            <input type="text" id="mod-provincia-${idCliente}" value="${cliente.Provincia}" required>
-            <select id="mod-stato-${idCliente}" required>
+            <input type="text" id="mod-nome-${idCliente}" value="${cliente.Nome}" class="campo-nome" required>
+            <input type="email" id="mod-email-${idCliente}" value="${cliente.Email}" class="campo-email" required>
+            <input type="text" id="mod-telefono-${idCliente}" value="${cliente.Telefono}" class="campo-telefono" required>
+            <input type="text" id="mod-citta-${idCliente}" value="${cliente.Città}" class="campo-cittao" required>
+            <input type="text" id="mod-provincia-${idCliente}" value="${cliente.Provincia}" class="campo-provincia" required>
+            <select id="mod-stato-${idCliente}" class="campo-stato" required>
               <option value="">-- Seleziona stato --</option>
             </select>
             <button type="submit">💾 Salva</button>

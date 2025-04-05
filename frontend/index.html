@@ -523,38 +523,47 @@
       }
     }
 
+    // Funzione che gestisce il caricamento di un file per uno specifico cliente
     function uploadFile(e, idCliente) {
-      e.preventDefault();
-      const fileInput = document.getElementById(`file-${idCliente}`);
-      const formData = new FormData();
-      formData.append('file', fileInput.files[0]);
+      e.preventDefault();                                                    // Impedisce il comportamento di default del form (refresh della pagina)
+      const fileInput = document.getElementById(`file-${idCliente}`);        // Seleziona l'input file relativo al cliente specifico
+      const formData = new FormData();                                       // Crea un oggetto FormData per inviare il file al server
+      formData.append('file', fileInput.files[0]);                           // Aggiunge il primo file selezionato
 
+      // Esegue una richiesta POST al server per caricare il file
       fetch(`/upload/${idCliente}`, {
         method: 'POST',
         body: formData
       })
-        .then(res => res.json())
-        .then(() => caricaDocumenti(idCliente));
+        .then(res => res.json())                              // Converte la risposta in JSON
+        .then(() => caricaDocumenti(idCliente));              // Ricarica l'elenco dei documenti dopo l'upload
     }
 
+    // Ricarica l'elenco dei documenti dopo l'upload
     function caricaDocumenti(idCliente) {
+      // Richiede l'elenco dei file del cliente dal backend
       fetch(`/files/${idCliente}`)
-        .then(res => res.json())
+        .then(res => res.json())        // Converte la risposta in JSON
         .then(data => {
           const container = document.getElementById(`lista-documenti-${idCliente}`);
+          
+          // Se non ci sono documenti, mostra un messaggio
           if (!data || data.length === 0) {
             container.innerHTML = "<p>Nessun documento caricato.</p>";
             return;
           }
-    
+          // Costruisce la lista HTML dei documenti
           let html = "<ul>";
           data.forEach(doc => {
+            // Determina l'icona da mostrare in base allo stato del documento
             const stato = doc.stato === "Approvato" ? "✅" :
                           doc.stato === "ELIMINATO" ? "❌" : "⏳";
-    
+
+            // Applica una classe CSS in base allo stato del documento (utile per colorare lo stato)
             const colore = doc.stato === "Approvato" ? "approvato" :
                            doc.stato === "ELIMINATO" ? "in-attesa" : "in-attesa";
-    
+
+            // Crea l'elemento della lista con link al documento, stato visivo, ed eventuale bottone di eliminazione
             html += `<li>
               <a href="${doc.url}" target="_blank">${doc.name}</a>
               <span class="${colore}"> ${stato} ${doc.stato}</span>
@@ -564,24 +573,30 @@
           });
     
           html += "</ul>";
-          container.innerHTML = html;
+          container.innerHTML = html;        // Mostra l'elenco nel contenitore
         });
     }
 
+    // Funzione che elimina un file specifico associato a un cliente
     function eliminaFile(idFile, idCliente) {
+      // Chiede conferma all'utente prima di procedere con l'eliminazione
       if (!confirm("Sei sicuro di voler eliminare questo file?")) return;
     
+      // Invia una richiesta DELETE al server per rimuovere il file
       fetch(`/file/${idFile}`, { method: 'DELETE' })
-        .then(res => res.json())
+        .then(res => res.json())       // Converte la risposta in formato JSON
         .then(data => {
-          console.log(data.message);
-          caricaDocumenti(idCliente);
+          console.log(data.message);   // Mostra un messaggio di conferma nel log
+          caricaDocumenti(idCliente);  // Ricarica la lista dei documenti per aggiornare la vista
         });
     }
 
-
+    // Funzione che mostra la sezione interazioni per un cliente specifico
     function mostraInterazioni(idCliente) {
+      // Trova il contenitore HTML in cui inserire la sezione interazioni
       const container = document.getElementById(`extra-${idCliente}`);
+    
+      // Inserisce il contenuto HTML dinamico: titolo, form di inserimento e sezione lista interazioni
       container.innerHTML = `
         <div class="sezione-extra">
           <h4>Interazioni per ${idCliente}</h4>
@@ -595,43 +610,60 @@
           <div id="lista-interazioni-${idCliente}"></div>
         </div>
       `;
+    
+      // Carica dinamicamente le opzioni dei menu a tendina (tipo ed esito) dal backend
       caricaTipiInterazione(`tipo-${idCliente}`);
       caricaEsitiInterazione(`esito-${idCliente}`);
+    
+      // Carica la lista di interazioni già salvate per il cliente
       caricaInterazioni(idCliente);
     }
 
+    // Funzione che recupera e mostra la lista delle interazioni di un cliente
     function caricaInterazioni(idCliente) {
+      // Effettua una richiesta GET al server per ottenere le interazioni del cliente
       fetch(`/interazioni/${idCliente}`)
         .then(res => res.json())
         .then(data => {
           const container = document.getElementById(`lista-interazioni-${idCliente}`);
+    
+          // Se non ci sono interazioni registrate, mostra un messaggio
           if (!data || data.length === 0) {
             container.innerHTML = "<p>Nessuna interazione registrata.</p>";
             return;
           }
-
+    
+          // Ordina le interazioni in ordine decrescente di data (più recente prima)
           data.sort((a, b) => {
             const parse = d => {
-              const [gg, mm, aa] = d.split("/"); return new Date(`${aa}-${mm}-${gg}`);
+              const [gg, mm, aa] = d.split("/");  // es: "04/04/2025"
+              return new Date(`${aa}-${mm}-${gg}`); // formato ISO "2025-04-04"
             };
             return parse(b.Data) - parse(a.Data);
           });
-
+    
+          // Costruisce l'HTML per la tabella interazioni
           let html = `
             <table>
               <thead><tr><th>Data</th><th>Tipo</th><th>Esito</th><th>Descrizione</th></tr></thead>
               <tbody>
           `;
+    
+          // Aggiunge una riga per ogni interazione
           data.forEach(i => {
             html += `<tr><td>${i.Data}</td><td>${i.Tipo}</td><td>${i.Esito}</td><td>${i.Descrizione}</td></tr>`;
           });
+    
           html += `</tbody></table>`;
-          container.innerHTML = html;
+          container.innerHTML = html; // Inserisce il contenuto nella pagina
         });
     }
 
+    // Funzione che gestisce l'aggiunta di una nuova interazione per un cliente
     function aggiungiInterazione(e, idCliente) {
-      e.preventDefault();
+      e.preventDefault();  // Previene il comportamento predefinito del form
+    
+      // Costruisce l'oggetto contenente i dati del form
       const payload = {
         ID_Cliente: idCliente,
         Data: document.getElementById(`data-${idCliente}`).value,
@@ -639,21 +671,29 @@
         Esito: document.getElementById(`esito-${idCliente}`).value,
         Descrizione: document.getElementById(`descrizione-${idCliente}`).value
       };
+    
+      // Invia i dati al server con metodo POST
       fetch('/interazioni', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
         .then(res => res.json())
-        .then(() => caricaInterazioni(idCliente));
+        .then(() => caricaInterazioni(idCliente)); // Ricarica le interazioni aggiornate
     }
 
+    // Funzione che carica i "Tipi di Interazione" nel menu a tendina selezionato
     function caricaTipiInterazione(selectId) {
+      // Richiede al server l'elenco dei tipi disponibili
       fetch("/tipi-interazione")
         .then(res => res.json())
         .then(data => {
           const select = document.getElementById(selectId);
+    
+          // Inserisce l'opzione iniziale
           select.innerHTML = '<option value="">-- Seleziona tipo --</option>';
+    
+          // Aggiunge ogni tipo ricevuto come opzione del select
           data.forEach(tipo => {
             const opt = document.createElement("option");
             opt.value = tipo;
@@ -663,12 +703,18 @@
         });
     }
 
+    // Funzione che carica dinamicamente la lista degli "Esiti di Interazione" all'interno di un <select>
     function caricaEsitiInterazione(selectId) {
+      // Esegue una richiesta GET all'endpoint che restituisce gli esiti disponibili
       fetch("/esiti-interazione")
         .then(res => res.json())
         .then(data => {
           const select = document.getElementById(selectId);
+    
+          // Imposta l'opzione iniziale del menu a tendina
           select.innerHTML = '<option value="">-- Seleziona esito --</option>';
+    
+          // Inserisce ogni esito come opzione all'interno del <select>
           data.forEach(esito => {
             const opt = document.createElement("option");
             opt.value = esito;
@@ -678,48 +724,68 @@
         });
     }
 
+
+    // Funzione che carica gli "Stati del Cliente" in un menu a tendina (select)
+    // Può essere usata sia nel form di creazione che nella modifica (grazie ai parametri)
     function caricaStatiCliente(selectId = "stato", valoreSelezionato = "") {
-       fetch("/stati-cliente")
+      // Esegue una richiesta GET per ottenere gli stati disponibili
+      fetch("/stati-cliente")
         .then(res => res.json())
         .then(data => {
           const select = document.getElementById(selectId);
+    
+          // Aggiunge l'opzione di default iniziale
           select.innerHTML = '<option value="">-- Seleziona stato --</option>';
+    
+          // Per ogni stato ricevuto, crea un'opzione da aggiungere al <select>
           data.forEach(stato => {
-             const opt = document.createElement("option");
-             opt.value = stato;
-             opt.textContent = stato;
-             if (stato === valoreSelezionato) opt.selected = true;
-             select.appendChild(opt);
+            const opt = document.createElement("option");
+            opt.value = stato;
+            opt.textContent = stato;
+    
+            // Se lo stato corrente è uguale a quello da selezionare, lo marca come selezionato
+            if (stato === valoreSelezionato) opt.selected = true;
+    
+            select.appendChild(opt);
           });
         });
     }
 
-      function salvaModificaCliente(e, idCliente) {
-          e.preventDefault();
-          const payload = {
-              Nome: document.getElementById(`mod-nome-${idCliente}`).value,
-              Email: document.getElementById(`mod-email-${idCliente}`).value,
-              Telefono: document.getElementById(`mod-telefono-${idCliente}`).value,
-              Città: document.getElementById(`mod-citta-${idCliente}`).value,
-              Provincia: document.getElementById(`mod-provincia-${idCliente}`).value,
-              Stato: document.getElementById(`mod-stato-${idCliente}`).value
-          };
 
-          fetch(`/clienti/${idCliente}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-          })
-              .then(res => res.json())
-              .then(data => {
-                  alert(data.message);
-                  caricaClienti();
-              });
-      }
+    // Funzione che salva le modifiche effettuate su un cliente esistente
+    function salvaModificaCliente(e, idCliente) {
+        e.preventDefault();  // Previene il comportamento standard del form
+      
+        // Raccoglie i dati modificati dai campi input
+        const payload = {
+          Nome: document.getElementById(`mod-nome-${idCliente}`).value,
+          Email: document.getElementById(`mod-email-${idCliente}`).value,
+          Telefono: document.getElementById(`mod-telefono-${idCliente}`).value,
+          Città: document.getElementById(`mod-citta-${idCliente}`).value,
+          Provincia: document.getElementById(`mod-provincia-${idCliente}`).value,
+          Stato: document.getElementById(`mod-stato-${idCliente}`).value
+        };
+      
+        // Invia i dati al server con metodo PUT per aggiornare il cliente
+        fetch(`/clienti/${idCliente}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+          .then(res => res.json())
+          .then(data => {
+            alert(data.message);     // Mostra conferma
+            caricaClienti();         // Ricarica la lista clienti aggiornata
+          });
+    }
 
 
+    // questa funzione gestisce l'inserimento di un nuovo cliente via form, lo invia al backend, aggiorna la lista e mostra un messaggio di conferma.
+    // Aggiunge un listener per l'evento di submit al form con id "form-cliente"
     document.getElementById("form-cliente").addEventListener("submit", function (e) {
-      e.preventDefault();
+      e.preventDefault(); // Impedisce il comportamento predefinito del form (es. ricarica della pagina)
+    
+      // Costruisce un oggetto con i dati inseriti nel form
       const nuovoCliente = {
         Nome: document.getElementById('nome').value,
         Email: document.getElementById('email').value,
@@ -728,65 +794,76 @@
         Provincia: document.getElementById('provincia').value,
         Stato: document.getElementById('stato').value
       };
-
+    
+      // Invia i dati del nuovo cliente al backend tramite POST
       fetch('/clienti', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nuovoCliente)
+        headers: { 'Content-Type': 'application/json' }, // Specifica il tipo di contenuto inviato
+        body: JSON.stringify(nuovoCliente)               // Converte l'oggetto in formato JSON
       })
-        .then(res => res.json())
+        .then(res => res.json())                          // Converte la risposta in JSON
         .then(data => {
-          caricaClienti();
-          document.getElementById("form-cliente").reset();
-          const msg = document.getElementById("messaggio-successo");
+          caricaClienti();                                // Ricarica la tabella clienti per mostrare il nuovo inserimento
+          document.getElementById("form-cliente").reset(); // Pulisce i campi del form
+          const msg = document.getElementById("messaggio-successo"); // Mostra messaggio di conferma
           msg.textContent = data.message;
-          setTimeout(() => msg.textContent = "", 5000);
+          setTimeout(() => msg.textContent = "", 5000);    // Rimuove il messaggio dopo 5 secondi
         });
     });
 
+
+    // Al caricamento completo del DOM, esegue le seguenti funzioni iniziali:
     window.addEventListener('DOMContentLoaded', () => {
-      caricaClienti();
-      caricaStatiCliente();
-      mostraDatiAgente();
+      caricaClienti();         // Carica e mostra l'elenco dei clienti nella tabella
+      caricaStatiCliente();    // Carica gli stati cliente nel menu a tendina del form nuovo cliente
+      mostraDatiAgente();      // Mostra nome e codice dell'agente loggato nell'interfaccia
     });
+
+    // Recupera i dati dell'agente loggato e li visualizza
     function mostraDatiAgente() {
       fetch("/dati-agente")
         .then(res => res.json())
         .then(data => {
-          const nomeCompleto = data.nome_completo || "Agente";
+          const nomeCompleto = data.nome_completo || "Agente"; // Valore di default se assente
           const codice = data.codice || "";
           document.getElementById("nome-agente").textContent = `${nomeCompleto} - ${codice}`;
         });
     }
 
-      function modificaCliente(idCliente) {
-          const container = document.getElementById(`extra-${idCliente}`);
-          fetch('/clienti')
-              .then(res => res.json())
-              .then(clienti => {
-                  const cliente = clienti.find(c => c.ID_Cliente === idCliente);
-                  if (!cliente) return;
+    // Avvia la modalità modifica per un cliente specifico
+    function modificaCliente(idCliente) {
+        const container = document.getElementById(`extra-${idCliente}`); // Sezione extra sotto la riga cliente
+      
+        fetch('/clienti') // Recupera tutti i clienti (potrebbe essere ottimizzato per prendere solo quello richiesto)
+          .then(res => res.json())
+          .then(clienti => {
+            // Trova il cliente da modificare
+            const cliente = clienti.find(c => c.ID_Cliente === idCliente);
+            if (!cliente) return; // Se non trovato, interrompe
+      
+            // Inserisce un form di modifica precompilato con i dati attuali del cliente
+            container.innerHTML = `
+              <div class="sezione-extra">
+                <h4>Modifica Cliente ${idCliente}</h4>
+                <form onsubmit="salvaModificaCliente(event, '${idCliente}')">
+                  <input type="text" id="mod-nome-${idCliente}" value="${cliente.Nome}" class="campo-nome" required>
+                  <input type="email" id="mod-email-${idCliente}" value="${cliente.Email}" class="campo-email" required>
+                  <input type="text" id="mod-telefono-${idCliente}" value="${cliente.Telefono}" class="campo-telefono" required>
+                  <input type="text" id="mod-citta-${idCliente}" value="${cliente.Città}" class="campo-citta" required>
+                  <input type="text" id="mod-provincia-${idCliente}" value="${cliente.Provincia}" class="campo-provincia" required>
+                  <select id="mod-stato-${idCliente}" class="campo-stato" required>
+                    <option value="">-- Seleziona stato --</option>
+                  </select>
+                  <button type="submit">💾 Salva</button>
+                </form>
+              </div>
+            `;
+      
+            // Carica gli stati nel menu a tendina, selezionando lo stato attuale del cliente
+            caricaStatiCliente(`mod-stato-${idCliente}`, cliente.Stato);
+          });
+    }
 
-                  container.innerHTML = `
-        <div class="sezione-extra">
-          <h4>Modifica Cliente ${idCliente}</h4>
-          <form onsubmit="salvaModificaCliente(event, '${idCliente}')">
-            <input type="text" id="mod-nome-${idCliente}" value="${cliente.Nome}" class="campo-nome" required>
-            <input type="email" id="mod-email-${idCliente}" value="${cliente.Email}" class="campo-email" required>
-            <input type="text" id="mod-telefono-${idCliente}" value="${cliente.Telefono}" class="campo-telefono" required>
-            <input type="text" id="mod-citta-${idCliente}" value="${cliente.Città}" class="campo-cittao" required>
-            <input type="text" id="mod-provincia-${idCliente}" value="${cliente.Provincia}" class="campo-provincia" required>
-            <select id="mod-stato-${idCliente}" class="campo-stato" required>
-              <option value="">-- Seleziona stato --</option>
-            </select>
-            <button type="submit">💾 Salva</button>
-          </form>
-        </div>
-      `;
-
-                  caricaStatiCliente(`mod-stato-${idCliente}`, cliente.Stato);
-              });
-      }
 
   </script>
 </body>

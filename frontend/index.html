@@ -87,6 +87,32 @@
             gap: 5px;
             flex-wrap: wrap;
         }
+
+        /* Stile per la finestra modale */
+        dialog {
+            width: 60%;
+            border: none;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+            dialog::backdrop {
+                background: rgba(0, 0, 0, 0.5);
+            }
+
+        .modal-content {
+            position: relative;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
@@ -101,6 +127,17 @@
     <button id="btn-nuovo" onclick="mostraFormNuovoCliente()">➕ Nuovo Cliente</button>
 
     <table>
+        <!-- Finestra Modale per i Dettagli del Cliente -->
+        <dialog id="dettagliClienteModal">
+            <div class="modal-content">
+                <span class="close-button" onclick="chiudiDettagliCliente()">&times;</span>
+                <h2>Dettagli Cliente</h2>
+                <div id="dettagliClienteContent">
+                    <!-- I dettagli del cliente verranno inseriti qui -->
+                </div>
+            </div>
+        </dialog>
+
         <thead>
             <tr>
                 <th>ID</th>
@@ -126,9 +163,32 @@
             alert("Form di inserimento cliente (da implementare)");
         }
 
-        function mostraDettagliCliente(id) {
-            alert("Dettagli cliente: " + id);
+        // Funzione per mostrare la finestra modale con i dettagli del cliente
+        function mostraDettagliCliente(idCliente) {
+            fetch(`/clienti/${idCliente}`)
+                .then(response => response.json())
+                .then(cliente => {
+                    const dettagliContent = document.getElementById('dettagliClienteContent');
+                    dettagliContent.innerHTML = `
+                        <p><strong>ID Cliente:</strong> ${cliente.ID_Cliente}</p>
+                        <p><strong>Nome:</strong> ${cliente.Nome}</p>
+                        <p><strong>Telefono:</strong> ${cliente.Telefono}</p>
+                        <p><strong>Settore:</strong> ${cliente.Settore}</p>
+                        <p><strong>Stato:</strong> ${cliente.Stato}</p>
+                        <!-- Aggiungi qui altri campi se necessario -->
+                      `;
+                    const modal = document.getElementById('dettagliClienteModal');
+                    modal.showModal();
+                })
+                .catch(error => console.error('Errore nel recupero dei dettagli del cliente:', error));
         }
+
+        // Funzione per chiudere la finestra modale
+        function chiudiDettagliCliente() {
+            const modal = document.getElementById('dettagliClienteModal');
+            modal.close();
+        }
+
 
         function mostraDocumenti(id) {
             alert("Documenti cliente: " + id);
@@ -159,7 +219,7 @@
                     <td>${c.Stato}</td>
                     <td>
                         <div class="actions-dropdown">
-                            <button class="mini-btn" onclick="mostraDettagliCliente('${c.ID_Cliente}')">📄 Dettagli</button>
+                            <button class="mini-btn" onclick="mostraDettagliCliente('${cliente.ID_Cliente}')">📄 Dettagli</button>
                             <button class="mini-btn" onclick="mostraDocumenti('${c.ID_Cliente}')">📎 Documenti</button>
                             <button class="mini-btn" onclick="mostraInterazioni('${c.ID_Cliente}')">📋 Interazioni</button>
                             <button class="mini-btn" onclick="modificaCliente('${c.ID_Cliente}')">📝 Modifica</button>

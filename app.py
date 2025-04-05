@@ -206,7 +206,7 @@ def add_interazione():
     records = interazioni_sheet.get_all_records()
     nuovo_id = f"I{len(records) + 1:03d}"
 
-        new_row = [
+    new_row = [
         nuovo_id,                    
         data.get("Nome"),           
         data.get("Categoria"),

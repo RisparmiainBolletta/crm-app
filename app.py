@@ -105,7 +105,7 @@ def get_clienti():
         return jsonify({"message": "Non autenticato"}), 401
     records = clienti_sheet.get_all_records()
     # Ogni agente vede solo i suoi
-    clienti_filtrati = [c for c in records if str(c.get("Agente")) == codice_agente]
+    clienti_filtrati = [c for c in records if str(c.get("Agente")) == codice_agente][::-1]
     return jsonify(clienti_filtrati)
 
 @app.route("/clienti", methods=["POST"])
@@ -130,16 +130,22 @@ def add_cliente():
     prossimo_numero = max(numeri_usati) + 1 if numeri_usati else 1
     nuovo_id = f"{codice_agente}-{prossimo_numero:04d}"
 
-    new_row = [
-        nuovo_id,                    # A: ID_Cliente
-        data.get("Nome"),           # B: Nome
-        data.get("Email"),          # C: Email
-        data.get("Telefono"),       # D: Telefono
-        data.get("Città"),          # E: Città
-        data.get("Provincia"),      # F: Provincia
-        codice_agente,              # E: Agente
-        data.get("Stato"),          # F: Stato
-        ""                          # G: Provvigione (gestita dal foglio)
+        new_row = [
+        nuovo_id,                    
+        data.get("Nome"),           
+        data.get("Categoria"),
+        data.get("Email"),          
+        data.get("Telefono"),
+        data.get("Citta"),
+        data.get("Provincia"),
+        data.get("Stato"),          
+        "",                          
+        data.get("POD_PDR"),
+        data.get("Settore"),
+        data.get("Nuovo_Fornitore"),
+        data.get("Codice_Fiscale"),
+        data.get("Partita_IVA"),
+        codice_agente              
     ]
     clienti_sheet.append_row(new_row)
     return jsonify({"message": f"Cliente aggiunto con ID {nuovo_id}"}), 201
@@ -200,14 +206,22 @@ def add_interazione():
     records = interazioni_sheet.get_all_records()
     nuovo_id = f"I{len(records) + 1:03d}"
 
-    new_row = [
-        nuovo_id,                        # A: ID_Interazione
-        data.get("ID_Cliente"),         # B: ID_Cliente
-        codice_agente,                  # C: Agente
-        data_formattata,                # D: Data
-        data.get("Tipo"),               # E: Tipo
-        data.get("Esito"),              # F: Esito
-        data.get("Descrizione")         # G: Descrizione
+        new_row = [
+        nuovo_id,                    
+        data.get("Nome"),           
+        data.get("Categoria"),
+        data.get("Email"),          
+        data.get("Telefono"),
+        data.get("Citta"),
+        data.get("Provincia"),
+        data.get("Stato"),          
+        "",                          
+        data.get("POD_PDR"),
+        data.get("Settore"),
+        data.get("Nuovo_Fornitore"),
+        data.get("Codice_Fiscale"),
+        data.get("Partita_IVA"),
+        codice_agente              
     ]
     interazioni_sheet.append_row(new_row)
     return jsonify({"message": f"Interazione {nuovo_id} aggiunta"}), 201

@@ -183,6 +183,49 @@
         width: auto;
     }
 
+    /*=== FINESTRA MODALE PER NUOVO CLIENTE ===*/
+    .modale {
+      display: none; /* nascosta inizialmente */
+      position: fixed;
+      z-index: 999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4); /* sfondo semi-trasparente */
+    }
+    
+    .modale-contenuto {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 8px;
+      position: relative;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    
+    .chiudi {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      font-size: 22px;
+      cursor: pointer;
+    }
+    
+    .aggiungi-cliente-btn {
+      background-color: #0284c7;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
     /* === CAMPI INPUT CON CLASSI PERSONALIZZATE === */
     .campo-nome {
         padding: 10px;
@@ -322,19 +365,28 @@
   <!-- Titolo della sezione per l'aggiunta di un nuovo cliente -->
   <h3>Aggiungi nuovo cliente</h3>
 
-  <!-- Form per l'inserimento di un nuovo cliente -->
-  <form id="form-cliente">
-    <input type="text" placeholder="Nome" id="nome" class="campo-nome" required>                        <!-- Campo di testo per il nome del cliente -->
-    <input type="email" placeholder="Email" id="email" class="campo-email" required>                    <!-- Campo di testo per l'email del cliente -->
-    <input type="text" placeholder="Telefono" id="telefono" class="campo-telefono" required>            <!-- Campo di testo per il numero di telefono -->
-    <input type="text" placeholder="Città" id="citta" class="campo-citta" required>                     <!-- Campo di testo per la città del cliente -->
-    <input type="text" placeholder="Provincia" id="provincia" class="campo-provincia" required>         <!-- Campo di testo per la provincia del cliente -->
-    <select id="stato" class="campo-stato" required>                                                    <!-- Menu a tendina per la selezione dello stato (caricato dinamicamente via JavaScript) -->
-      <option value="">-- Caricamento stati... --</option>
-    </select>
-    
-    <button type="submit" class="aggiungi-btn">Aggiungi</button>                          <!-- Pulsante per inviare il form e aggiungere il cliente -->
-  </form>
+  <!-- Bottone per aprire la modale -->
+  <button id="btn-apri-modale" class="aggiungi-cliente-btn">➕ Aggiungi Cliente</button>
+  
+  <!-- Finestra modale nascosta all'inizio -->
+  <div id="modale-nuovo-cliente" class="modale">
+    <div class="modale-contenuto">
+      <span class="chiudi" onclick="chiudiModale()">×</span>
+      <h3>Aggiungi Nuovo Cliente</h3>
+      <form id="form-cliente">
+      <input type="text" placeholder="Nome" id="nome" class="campo-nome" required>                        <!-- Campo di testo per il nome del cliente -->
+      <input type="email" placeholder="Email" id="email" class="campo-email" required>                    <!-- Campo di testo per l'email del cliente -->
+      <input type="text" placeholder="Telefono" id="telefono" class="campo-telefono" required>            <!-- Campo di testo per il numero di telefono -->
+      <input type="text" placeholder="Città" id="citta" class="campo-citta" required>                     <!-- Campo di testo per la città del cliente -->
+      <input type="text" placeholder="Provincia" id="provincia" class="campo-provincia" required>         <!-- Campo di testo per la provincia del cliente -->
+      <select id="stato" class="campo-stato" required>                                                    <!-- Menu a tendina per la selezione dello stato (caricato dinamicamente via JavaScript) -->
+        <option value="">-- Caricamento stati... --</option>
+      </select>
+      
+      <button type="submit" class="aggiungi-btn">Aggiungi</button>                          <!-- Pulsante per inviare il form e aggiungere il cliente -->
+    </form>
+    </div>
+  </div>
 
   <p id="messaggio-successo" style="color: green; font-weight: bold;"></p>                <!-- Paragrafo che verrà popolato con un messaggio di conferma dopo l'aggiunta -->
 
@@ -359,6 +411,25 @@
   </table>
 
   <script>
+
+    // Mostra la finestra modale
+    document.getElementById("btn-apri-modale").addEventListener("click", () => {
+      document.getElementById("modale-nuovo-cliente").style.display = "block";
+    });
+      
+    // Chiude la finestra modale
+    function chiudiModale() {
+      document.getElementById("modale-nuovo-cliente").style.display = "none";
+    }
+      
+    // Chiude anche cliccando fuori dalla modale
+    window.addEventListener("click", function (event) {
+      const modale = document.getElementById("modale-nuovo-cliente");
+      if (event.target == modale) {
+        modale.style.display = "none";
+      }
+    });
+
 
      // Funzione per eseguire il logout: reindirizza alla route /logout
     function logout() {
@@ -784,6 +855,11 @@
     // Aggiunge un listener per l'evento di submit al form con id "form-cliente"
     document.getElementById("form-cliente").addEventListener("submit", function (e) {
       e.preventDefault(); // Impedisce il comportamento predefinito del form (es. ricarica della pagina)
+
+      .then(data => {
+        // chiude la finestra dopo invio
+        document.getElementById("modale-nuovo-cliente").style.display = "none";
+      });
     
       // Costruisce un oggetto con i dati inseriti nel form
       const nuovoCliente = {

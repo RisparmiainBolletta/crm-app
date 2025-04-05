@@ -1,36 +1,41 @@
-<!DOCTYPE html>     /* Dichiara il tipo di documento HTML5. */
-<html lang="it">      /*Inizio del documento HTML, con lingua impostata su italiano.*/
+<!DOCTYPE html>     <!-- Dichiara il tipo di documento HTML5 -->
+<html lang="it">     <!-- Inizio del documento HTML, con lingua impostata su italiano -->
 <head>
-  <meta charset="UTF-8">      /*Imposta la codifica dei caratteri su UTF-8, utile per lettere accentate ecc.*/
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">      /*Rende il sito responsive su dispositivi mobili.*/
-  <title>CRM - Clienti</title>      /*Titolo visualizzato nella scheda del browser.*/
-  <style>      /*Inizio dello stile CSS. Vediamo ora i blocchi principali:*/
-    
-    /*Imposta font, margini e colore di sfondo generale del sito.*/ 
+  <meta charset="UTF-8">     <!-- Imposta la codifica dei caratteri su UTF-8 per supportare lettere accentate -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">     <!-- Rende il sito responsive su dispositivi mobili -->
+  <title>CRM - Clienti</title>     <!-- Titolo visualizzato nella scheda del browser -->
+
+  <style>  <!-- Inizio del blocco di stile CSS -->
+
+    /* === STILE GENERALE DEL BODY === */
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f4f8fb;
-      color: #333;
-      padding: 20px;
-    }
-    /*Colore e centratura per il titolo.*/
-    h1 {
-            text-align: center;
-            color: #0a2c49;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      background-color: #3498db;
-      padding: 15px 20px;
-      border-radius: 6px;
-      color: white;
+      font-family: 'Segoe UI', sans-serif;  /* Font elegante e leggibile */
+      background-color: #f4f8fb;            /* Colore di sfondo grigio-azzurro chiaro */
+      color: #333;                          /* Colore del testo */
+      padding: 20px;                        /* Spaziatura interna ai bordi della pagina */
     }
 
+    /* === TITOLO PRINCIPALE === */
+    h1 {
+      text-align: center;        /* Centra il titolo */
+      color: #0a2c49;            /* Colore blu scuro */
+    }
+
+    /* === HEADER IN ALTO CON LOGO E BOTTONE LOGOUT === */
+    header {
+      display: flex;                    /* Layout flessibile in riga */
+      justify-content: space-between;  /* Spazio tra gli elementi */
+      align-items: center;             /* Allinea verticalmente */
+      margin-bottom: 20px;             /* Spazio sotto il blocco */
+      background-color: #3498db;       /* Blu acceso */
+      padding: 15px 20px;              /* Spaziatura interna */
+      border-radius: 6px;              /* Angoli arrotondati */
+      color: white;                    /* Testo bianco */
+    }
+
+    /* === STILE PULSANTE LOGOUT === */
     .logout {
-      background: #e74c3c;
+      background: #e74c3c;     /* Rosso vivo */
       color: white;
       border: none;
       padding: 8px 16px;
@@ -38,6 +43,7 @@
       cursor: pointer;
     }
 
+    /* === STILE TABELLE === */
     table {
       border-collapse: collapse;
       width: 100%;
@@ -48,16 +54,17 @@
     }
 
     th, td {
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid #eee;   /* Riga divisoria chiara */
       padding: 10px;
       text-align: left;
     }
 
     th {
-      background-color: #f0f6fa;
+      background-color: #f0f6fa;  /* Sfondo delle intestazioni */
       color: #333;
     }
 
+    /* === INPUT E SELECT === */
     input, select {
       padding: 10px;
       margin: 5px 0;
@@ -68,9 +75,10 @@
     }
 
     button {
-      cursor: pointer;
+      cursor: pointer;   /* Cambia il cursore al passaggio del mouse */
     }
 
+    /* === PULSANTI PERSONALIZZATI === */
     .carica-btn {
       font-size: 12px;
       padding: 5px 10px;
@@ -118,22 +126,25 @@
       width: 100px;
     }
 
+    /* === HOVER SU PULSANTI === */
     .aggiungi-btn:hover { background-color: #27ae60; }
     .carica-btn:hover { background-color: #2980b9; }
     .elimina-btn:hover { background-color: #c0392b; }
     .aggiungi-inter-btn:hover { background-color: #732d91; }
 
+    /* === SEZIONE EXTRA (interazioni / documenti) === */
     .sezione-extra {
-      margin: 10px 0 30px 0;                     /* spazio sopra 5px), sotto (15px) */
-      background: #DEDEDE;                       /* colore di sfondo grigio chiaro */
-      padding: 15px;                             /* spazio interno al box */
-      border: 1px solid #ddd;                    /* bordo grigio chiaro */
-      border-radius: 6px;                        /* angoli arrotondati */
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);     /* leggero effetto ombra */
-      max-width: 100%;                           /* mai superare la larghezza del contenitore */
-      width: 90%;                                /* usa il 95% della larghezza disponibile */
+      margin: 10px 0 30px 0;
+      background: #DEDEDE;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      max-width: 100%;
+      width: 90%;
     }
 
+    /* === MINI-BUTTON STILE ICONA === */
     .mini-btn {
       cursor: pointer;
       font-size: 14px;
@@ -144,6 +155,7 @@
     .approvato { color: green; }
     .in-attesa { color: orange; }
 
+    /* === LOADER ROTANTE === */
     .loader {
       border: 6px solid #f3f3f3;
       border-top: 6px solid #3498db;
@@ -159,17 +171,19 @@
       100% { transform: rotate(360deg); }
     }
 
+    /* === BLOCCO INTESTAZIONE AGENTE === */
     .intestazione-agente {
         display: flex;
         align-items: center;
         gap: 10px;
     }
-    
+
     .logo-header {
-        height: 40px; /* Altezza ridotta per stare nella riga */
+        height: 40px;
         width: auto;
     }
 
+    /* === CAMPI INPUT CON CLASSI PERSONALIZZATE === */
     .campo-nome {
         padding: 10px;
         border-radius: 4px;
@@ -213,6 +227,7 @@
         width: 200px;
     }
 
+    /* === STILE DELLA TABELLA CLIENTI PRINCIPALE === */
     .tabella-clienti {
         border-collapse: separate;
         border-spacing: 0;
@@ -222,70 +237,75 @@
         border-radius: 8px;
         overflow: hidden;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      }
-      
-      .tabella-clienti th {
+    }
+
+    .tabella-clienti th {
         background-color: #004080;
         color: #fff;
         font-weight: bold;
         padding: 10px 12px;
         text-align: left;
-      }
-      
-      .tabella-clienti td {
+    }
+
+    .tabella-clienti td {
         padding: 10px 12px;
         border-bottom: 1px solid #eee;
-      }
-      
-      .tabella-clienti tr:hover {
+    }
+
+    .tabella-clienti tr:hover {
         background-color: #f3f9ff;
-      }
-      
-      .tabella-clienti td button,
-      .tabella-clienti td .mini-btn {
+    }
+
+    /* === MINI-BUTTON DENTRO CELLE DELLA TABELLA === */
+    .tabella-clienti td button,
+    .tabella-clienti td .mini-btn {
         padding: 6px 10px;
         font-size: 13px;
         margin: 0 4px;
         border: none;
         border-radius: 4px;
         cursor: pointer;
-        /*background-color: #007bff;*/
         color: white;
         transition: background-color 0.3s;
-      }
-      
-      .tabella-clienti td .mini-btn:hover {
-        background-color: #0056b3;
-      }
-      .tabella-clienti th:nth-child(7),
-      .tabella-clienti td:nth-child(7) {
-        display: none;
-      }
+    }
 
-      td .mini-btn {
+    .tabella-clienti td .mini-btn:hover {
+        background-color: #0056b3;
+    }
+
+    /* === NASCONDE LA COLONNA 7 (es: Agente) === */
+    .tabella-clienti th:nth-child(7),
+    .tabella-clienti td:nth-child(7) {
+        display: none;
+    }
+
+    /* === MINI-BUTTON RIDOTTI === */
+    td .mini-btn {
         display: inline-block;
         margin-right: 3px;
         white-space: nowrap;
         padding: 6px 10px;
         font-size: 10px;
         border-radius: 4px;
-        /*background-color: #007bff;*/
         color: white;
         cursor: pointer;
         transition: background-color 0.3s;
-      }
-      
-      td .mini-btn:hover {
+    }
+
+    td .mini-btn:hover {
         background-color: #0056b3;
-      }
-      .bottoni-azione {
+    }
+
+    /* === GRUPPO PULSANTI DI AZIONE === */
+    .bottoni-azione {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
-      }
-    
+    }
+
   </style>
 </head>
+
 <body>
 
   <header>

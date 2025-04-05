@@ -1,47 +1,71 @@
 # -*- coding: utf-8 -*-
+# Indica che il file utilizza la codifica UTF-8, utile per gestire caratteri speciali (accenti, simboli, ecc.)
+
+# === IMPORTAZIONI ===
 from flask import Flask, request, jsonify, send_from_directory, session, redirect
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-from flask_cors import CORS
-import os
-from datetime import datetime
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
-import tempfile
-import json
+# Flask: framework web principale
+# request: per ricevere dati da POST/GET
+# jsonify: per restituire dati in formato JSON
+# send_from_directory: per servire file statici
+# session: per gestire sessioni utente
+# redirect: per reindirizzare l'utente
 
-app = Flask(__name__, static_folder="frontend")
-app.secret_key = 'supersegreto123'
-CORS(app)
+import gspread  # Libreria per interfacciarsi con Google Sheets
+from oauth2client.service_account import ServiceAccountCredentials  # Autenticazione con vecchia API
+from flask_cors import CORS  # Per abilitare le richieste CORS (Cross-Origin Resource Sharing)
+import os  # Per accedere a variabili d’ambiente e funzionalità OS
+from datetime import datetime  # Per gestire date
+from google.oauth2 import service_account  # Autenticazione moderna con Google
+from googleapiclient.discovery import build  # Per costruire client per API Google (es. Drive)
+from googleapiclient.http import MediaFileUpload  # Per caricare file su Google Drive
+import tempfile  # Per gestire file temporanei
+import json  # Per lavorare con oggetti JSON
 
-# === 1. CONNESSIONE GOOGLE SHEETS ===
+# === CONFIGURAZIONE FLASK E CORS ===
+app = Flask(__name__, static_folder="frontend")  # Istanzia l'app Flask e imposta la cartella dei file statici
+app.secret_key = 'supersegreto123'  # Chiave segreta per gestire le sessioni Flask
+CORS(app)  # Abilita CORS su tutte le route (utile per frontend su dominio diverso)
+
+# === 1. CONNESSIONE A GOOGLE SHEETS ===
 scope = [
-    "https://spreadsheets.google.com/feeds",
-    "https://www.googleapis.com/auth/drive"
+    "https://spreadsheets.google.com/feeds",  # Accesso ai feed di Google Sheets
+    "https://www.googleapis.com/auth/drive"   # Accesso completo a Google Drive (necessario per allegati)
 ]
 
-# Carica le credenziali dal contenuto JSON salvato come variabile d’ambiente
+# Carica le credenziali da una variabile d'ambiente che contiene il JSON delle credenziali
 credentials_dict = json.loads(os.environ['GOOGLE_APPLICATION_CREDENTIALS_JSON'])
+
+# Autenticazione per accedere a Google Sheets
 creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scope)
+client = gspread.authorize(creds)  # Client gspread autenticato
 
-client = gspread.authorize(creds)
+# === 2. CONNESSIONE A GOOGLE DRIVE ===
 
-
-# === 2. CONNESSIONE GOOGLE DRIVE ===
+# Ricarica le stesse credenziali per Google Drive
 drive_credentials_dict = json.loads(os.environ['GOOGLE_APPLICATION_CREDENTIALS_JSON'])
+
+# Usa la nuova libreria google.oauth2 per autenticarsi con Drive
 drive_creds = service_account.Credentials.from_service_account_info(
-    drive_credentials_dict, scopes=['https://www.googleapis.com/auth/drive']
+    drive_credentials_dict,
+    scopes=['https://www.googleapis.com/auth/drive']  # Scope necessario per accedere e gestire file su Drive
 )
+
+# Crea il client per l'API Drive
 drive_service = build('drive', 'v3', credentials=drive_creds)
 
-MAIN_FOLDER_NAME = "CRM_Documenti"
-main_folder_id = None
+# === CONFIGURAZIONE CARTELLA PRINCIPALE ===
+MAIN_FOLDER_NAME = "CRM_Documenti"  # Nome della cartella principale su Google Drive dove salvare gli allegati
+main_folder_id = None  # Verrà assegnato l’ID della cartella
+
+# Verifica se esiste già una cartella con quel nome (non eliminata)
 results = drive_service.files().list(
     q=f"name='{MAIN_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false",
-    spaces='drive', fields="files(id, name)"
+    spaces='drive',
+    fields="files(id, name)"
 ).execute()
 folders = results.get('files', [])
+
+# Se esiste, usa quella; altrimenti la crea
 if folders:
     main_folder_id = folders[0]['id']
 else:
@@ -52,47 +76,65 @@ else:
     folder_created = drive_service.files().create(body=file_metadata, fields='id').execute()
     main_folder_id = folder_created.get('id')
 
-# === 3. APERTURA FOGLI GOOGLE ===
-clienti_sheet = client.open("CRM_Database").worksheet("Clienti")
-agenti_sheet = client.open("CRM_Database").worksheet("Agenti")
-interazioni_sheet = client.open("CRM_Database").worksheet("Interazioni")
-filelog_sheet = client.open("CRM_Database").worksheet("File_Allegati")
-impostazioni_sheet = client.open("CRM_Database").worksheet("Impostazioni")
+# === 3. APERTURA FOGLI GOOGLE SHEETS ===
+
+# Apre il file "CRM_Database" e accede ai vari fogli di lavoro
+clienti_sheet = client.open("CRM_Database").worksheet("Clienti")            # Foglio dei clienti
+agenti_sheet = client.open("CRM_Database").worksheet("Agenti")              # Foglio degli agenti
+interazioni_sheet = client.open("CRM_Database").worksheet("Interazioni")    # Foglio delle interazioni
+filelog_sheet = client.open("CRM_Database").worksheet("File_Allegati")      # Foglio con log dei file/documenti
+impostazioni_sheet = client.open("CRM_Database").worksheet("Impostazioni")  # Foglio per dropdown dinamici
 
 # -------------------------------------------------------------------
 #  A) FUNZIONI DI LOGIN / LOGOUT
 # -------------------------------------------------------------------
-@app.route("/login", methods=["POST"])
+
+# Definisce una route POST per il login. Quando l'utente invia le credenziali, questa funzione viene chiamata.
+@app.route("/login", methods=["POST"])                                              
 def login():
+    # Estrae i dati (codice e password) dal corpo della richiesta JSON.
     data = request.json
     codice = data.get("codice")
     password = data.get("password")
+    # Recupera tutti gli agenti dal foglio Google "Agenti", come lista di dizionari.
     agenti = agenti_sheet.get_all_records()
+    # Verifica se le credenziali corrispondono a un agente esistente.Se trovate:Salva il codice dell’agente nella sessione utente.Ritorna messaggio di successo con codice HTTP 200.
     for agente in agenti:
         if agente['Codice_Agente'] == codice and agente['Password'] == password:
             session['agente'] = codice
             return jsonify({"message": "Login riuscito", "agente": codice}), 200
+    # Se nessun match è stato trovato, ritorna errore HTTP 401 (non autorizzato).
     return jsonify({"message": "Credenziali errate"}), 401
 
+# Definisce la route GET per il logout.
 @app.route("/logout")
 def logout():
+    # Rimuove il codice agente dalla sessione se presente.
     session.pop('agente', None)
+    # Reindirizza l’utente alla home page dopo il logout.
     return redirect("/")
 
 # -------- NOME AGENTE ---------------
+# Definisce una route GET che restituisce i dati dell'agente loggato, da mostrare nel frontend (es. "Mario Rossi - AG01").
+
 @app.route("/dati-agente", methods=["GET"])
 def dati_agente():
+    # Verifica se l'agente è loggato, altrimenti ritorna errore HTTP 401.
     if 'agente' not in session:
         return jsonify({"message": "Non autenticato"}), 401
 
+    # Recupera il codice agente dalla sessione e tutti i record dal foglio "Agenti".
     codice = session['agente']
     agenti = agenti_sheet.get_all_records()
+
+    # Cerca l’agente nel foglio e restituisce: Il nome completo - Il codice
     for agente in agenti:
         if agente['Codice_Agente'] == codice:
             return jsonify({
                 "nome_completo": agente.get("Nome", ""),
                 "codice": codice
             })
+    # Se non trova l'agente nella lista, restituisce errore HTTP 404.
     return jsonify({"message": "Agente non trovato"}), 404
 
 # -------------------------------------------------------------------

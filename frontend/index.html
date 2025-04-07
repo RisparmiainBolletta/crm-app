@@ -867,7 +867,7 @@
         // Può essere usata sia nel form di creazione che nella modifica (grazie ai parametri)
         function caricaStatiCliente(selectId = "settore", valoreSelezionato = "") {
             // Esegue una richiesta GET per ottenere gli stati disponibili
-            fetch("/settori-cliente")
+            fetch("/settori-interazione")
                 .then(res => res.json())
                 .then(data => {
                     const select = document.getElementById(selectId);

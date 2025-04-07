@@ -178,7 +178,7 @@ def add_cliente():
         data.get("Categoria"),
         data.get("Email"),          
         data.get("Telefono"),
-        data.get("Citta"),
+        data.get("Città"),
         data.get("Provincia"),
         data.get("Stato"),          
         "",                          

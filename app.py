@@ -204,10 +204,10 @@ def aggiorna_cliente(id_cliente):
         if cliente["ID_Cliente"] == id_cliente and cliente["Agente"] == session['agente']:
             riga_excel = idx + 2  # +2 = salto intestazione e base1
             clienti_sheet.update(f"B{riga_excel}", [[data["Nome"]]])
-            clienti_sheet.update(f"C{riga_excel}", [[data["Email"]]])
-            clienti_sheet.update(f"D{riga_excel}", [[data["Telefono"]]])
-            clienti_sheet.update(f"E{riga_excel}", [[data["Città"]]])
-            clienti_sheet.update(f"F{riga_excel}", [[data["Provincia"]]])
+            clienti_sheet.update(f"D{riga_excel}", [[data["Email"]]])
+            clienti_sheet.update(f"E{riga_excel}", [[data["Telefono"]]])
+            clienti_sheet.update(f"F{riga_excel}", [[data["Città"]]])
+            clienti_sheet.update(f"G{riga_excel}", [[data["Provincia"]]])
             clienti_sheet.update(f"H{riga_excel}", [[data["Stato"]]])
             return jsonify({"message": "Cliente aggiornato correttamente"}), 200
 
@@ -631,7 +631,6 @@ def serve_index():
         return redirect("/")
     return send_from_directory(app.static_folder, "index.html")
 
-import os
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

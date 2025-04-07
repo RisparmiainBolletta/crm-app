@@ -557,7 +557,7 @@ def admin_upload_file(id_cliente):
 
 
 # -------------------------------------------------------------------
-#  E) GESTIONE STATI, TIPI, ESITI (Impostazioni)
+#  E) GESTIONE STATI, TIPI, ESITI, SETTORE (Impostazioni)
 # -------------------------------------------------------------------
 @app.route("/stati-cliente", methods=["GET"])
 def get_stati_cliente():
@@ -582,6 +582,15 @@ def get_esiti_interazione():
     try:
         valori = impostazioni_sheet.col_values(2)
         esiti = [v for v in valori if v.lower() != "esito_interazione" and v.strip() != ""]
+        return jsonify(esiti)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/settori-interazione", methods=["GET"])
+def get_settori_interazione():
+    try:
+        valori = impostazioni_sheet.col_values(4)
+        esiti = [v for v in valori if v.lower() != "settore_interazione" and v.strip() != ""]
         return jsonify(esiti)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

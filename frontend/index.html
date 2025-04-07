@@ -245,7 +245,7 @@
         }
 
         .aggiungi-cliente-btn {
-            background-color: #3399FF;
+            background-color: #FFC000;
             color: white;
             padding: 10px 20px;
             border: none;
@@ -407,20 +407,24 @@
             <span class="chiudi" onclick="chiudiModale()">&times;</span>
             <h3>Aggiungi nuovo cliente</h3>
             <form id="form-cliente">
-               <input type="text" placeholder="Nome" id="nome" class="campo-nome" required>                        <!-- Campo di testo per il nome del cliente -->
-               <input type="email" placeholder="Email" id="email" class="campo-email" required>                    <!-- Campo di testo per l'email del cliente -->
-               <input type="text" placeholder="Telefono" id="telefono" class="campo-telefono" required>            <!-- Campo di testo per il numero di telefono -->
-               <input type="text" placeholder="Città" id="citta" class="campo-citta" required>                     <!-- Campo di testo per la città del cliente -->
-               <input type="text" placeholder="Provincia" id="provincia" class="campo-provincia" required>         <!-- Campo di testo per la provincia del cliente -->
-               <select id="stato" class="campo-stato" required>
-                   <!-- Menu a tendina per la selezione dello stato (caricato dinamicamente via JavaScript) -->
-                   <option value="">-- Caricamento stati... --</option>
-               </select>
-               <input type="text" placeholder="POD_PDR" id="pod_pdr" class="campo-telefono" required>
-               <input type="text" placeholder="Codice_Fiscale" id="codice_fiscale" class="campo-telefono" required>
-               <input type="text" placeholder="Partita_IVA" id="partita_IVA" class="campo-telefono" required>
+                <input type="text" placeholder="Nome" id="nome" class="campo-nome" required>                        <!-- Campo di testo per il nome del cliente -->
+                <input type="email" placeholder="Email" id="email" class="campo-email" required>                    <!-- Campo di testo per l'email del cliente -->
+                <input type="text" placeholder="Telefono" id="telefono" class="campo-telefono" required>            <!-- Campo di testo per il numero di telefono -->
+                <input type="text" placeholder="Città" id="citta" class="campo-citta" required>                     <!-- Campo di testo per la città del cliente -->
+                <input type="text" placeholder="Provincia" id="provincia" class="campo-provincia" required>         <!-- Campo di testo per la provincia del cliente -->
+                <select id="stato" class="campo-stato" required>
+                    <!-- Menu a tendina per la selezione dello stato (caricato dinamicamente via JavaScript) -->
+                    <option value="">-- Caricamento stati... --</option>
+                </select>
+                <input type="text" placeholder="POD_PDR" id="pod_pdr" class="campo-telefono" required>
+                <select id="settore" class="campo-stato" required>
+                    <!-- Menu a tendina per la selezione del settore (caricato dinamicamente via JavaScript) -->
+                    <option value="">-- Caricamento settori... --</option>
+                </select>
+                <input type="text" placeholder="Codice_Fiscale" id="codice_fiscale" class="campo-telefono" required>
+                <input type="text" placeholder="Partita_IVA" id="partita_IVA" class="campo-telefono" required>
 
-               <button type="submit" class="aggiungi-btn">Aggiungi</button>                          <!-- Pulsante per inviare il form e aggiungere il cliente -->
+                <button type="submit" class="aggiungi-btn">Aggiungi</button>                          <!-- Pulsante per inviare il form e aggiungere il cliente -->
             </form>
         </div>
     </div>
@@ -859,6 +863,31 @@
                 });
         }
 
+        // Funzione che carica il "Settore" in un menu a tendina (select)
+        // Può essere usata sia nel form di creazione che nella modifica (grazie ai parametri)
+        function caricaStatiCliente(selectId = "settore", valoreSelezionato = "") {
+            // Esegue una richiesta GET per ottenere gli stati disponibili
+            fetch("/settori-cliente")
+                .then(res => res.json())
+                .then(data => {
+                    const select = document.getElementById(selectId);
+
+                    // Aggiunge l'opzione di default iniziale
+                    select.innerHTML = '<option value="">-- Seleziona settore --</option>';
+
+                    // Per ogni settore ricevuto, crea un'opzione da aggiungere al <select>
+                    data.forEach(settore => {
+                        const opt = document.createElement("option");
+                        opt.value = settore;
+                        opt.textContent = settore;
+
+                        // Se il settore corrente è uguale a quello da selezionare, lo marca come selezionato
+                        if (settore === valoreSelezionato) opt.selected = true;
+
+                        select.appendChild(opt);
+                    });
+                });
+        }
 
         // Funzione che salva le modifiche effettuate su un cliente esistente
         function salvaModificaCliente(e, idCliente) {
@@ -904,6 +933,7 @@
                 Città: document.getElementById('citta').value,
                 Provincia: document.getElementById('provincia').value,
                 Stato: document.getElementById('stato').value
+                Settore: document.getElementById('settore').value
             };
 
             // Invia i dati del nuovo cliente al backend tramite POST

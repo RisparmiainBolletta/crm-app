@@ -2,13 +2,16 @@
 # Indica che il file utilizza la codifica UTF-8, utile per gestire caratteri speciali (accenti, simboli, ecc.)
 
 # === IMPORTAZIONI ===
-from flask import Flask, request, jsonify, send_from_directory, session, redirect
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+###from flask import Flask, request, jsonify, send_from_directory, session, redirect
 # Flask: framework web principale
 # request: per ricevere dati da POST/GET
 # jsonify: per restituire dati in formato JSON
 # send_from_directory: per servire file statici
 # session: per gestire sessioni utente
 # redirect: per reindirizzare l'utente
+#from flask import request
+from datetime import datetime
 
 import gspread  # Libreria per interfacciarsi con Google Sheets
 from oauth2client.service_account import ServiceAccountCredentials  # Autenticazione con vecchia API
@@ -22,8 +25,8 @@ import tempfile  # Per gestire file temporanei
 import json  # Per lavorare con oggetti JSON
 
 # === CONFIGURAZIONE FLASK E CORS ===
-app = Flask(__name__, static_folder="frontend")  # Istanzia l'app Flask e imposta la cartella dei file statici
-app.secret_key = 'supersegreto123'  # Chiave segreta per gestire le sessioni Flask
+app = Flask(__name__) #, static_folder="templates")  # Istanzia l'app Flask e imposta la cartella dei file statici
+app.secret_key = 'supersegreto'  # Chiave segreta per gestire le sessioni Flask
 CORS(app)  # Abilita CORS su tutte le route (utile per frontend su dominio diverso)
 
 # === 1. CONNESSIONE A GOOGLE SHEETS ===
@@ -33,22 +36,26 @@ scope = [
 ]
 
 # Carica le credenziali da una variabile d'ambiente che contiene il JSON delle credenziali
-credentials_dict = json.loads(os.environ['GOOGLE_APPLICATION_CREDENTIALS_JSON'])
+###credentials_dict = json.loads(os.environ['GOOGLE_APPLICATION_CREDENTIALS_JSON'])
 
 # Autenticazione per accedere a Google Sheets
-creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scope)
+creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope) ###?
+###creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scope)
 client = gspread.authorize(creds)  # Client gspread autenticato
 
 # === 2. CONNESSIONE A GOOGLE DRIVE ===
 
 # Ricarica le stesse credenziali per Google Drive
-drive_credentials_dict = json.loads(os.environ['GOOGLE_APPLICATION_CREDENTIALS_JSON'])
+###drive_credentials_dict = json.loads(os.environ['GOOGLE_APPLICATION_CREDENTIALS_JSON'])
 
 # Usa la nuova libreria google.oauth2 per autenticarsi con Drive
-drive_creds = service_account.Credentials.from_service_account_info(
-    drive_credentials_dict,
-    scopes=['https://www.googleapis.com/auth/drive']  # Scope necessario per accedere e gestire file su Drive
-)
+###drive_creds = service_account.Credentials.from_service_account_info(
+###    drive_credentials_dict,
+###    scopes=['https://www.googleapis.com/auth/drive']  # Scope necessario per accedere e gestire file su Drive
+###)
+drive_creds = service_account.Credentials.from_service_account_file(        ###?
+    'credentials.json', scopes=['https://www.googleapis.com/auth/drive']    ###?
+)                                                                           ###?
 
 # Crea il client per l'API Drive
 drive_service = build('drive', 'v3', credentials=drive_creds)
@@ -90,27 +97,47 @@ impostazioni_sheet = client.open("CRM_Database").worksheet("Impostazioni")  # Fo
 # -------------------------------------------------------------------
 
 # Definisce una route POST per il login. Quando l'utente invia le credenziali, questa funzione viene chiamata.
-@app.route("/login", methods=["POST"])                                              
+
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    # Estrae i dati (codice e password) dal corpo della richiesta JSON.
-    data = request.json
-    codice = data.get("codice")
-    password = data.get("password")
-    # Recupera tutti gli agenti dal foglio Google "Agenti", come lista di dizionari.
-    agenti = agenti_sheet.get_all_records()
-    # Verifica se le credenziali corrispondono a un agente esistente.Se trovate:Salva il codice dell’agente nella sessione utente.Ritorna messaggio di successo con codice HTTP 200.
-    for agente in agenti:
-        if agente['Codice_Agente'] == codice and agente['Password'] == password:
-            session['agente'] = codice
-            return jsonify({"message": "Login riuscito", "agente": codice}), 200
-    # Se nessun match è stato trovato, ritorna errore HTTP 401 (non autorizzato).
-    return jsonify({"message": "Credenziali errate"}), 401
+    if request.method == "POST":
+        # POST da frontend con fetch JSON
+        if request.is_json:
+            data = request.get_json()
+            codice = data.get("codice")
+            password = data.get("password")
+        else:
+            # POST da form HTML
+            codice = request.form.get("codice")
+            password = request.form.get("password")
+
+        agenti = agenti_sheet.get_all_records()
+        for agente in agenti:
+            if agente['Codice_Agente'] == codice and agente['Password'] == password:
+                session['agente'] = codice
+                session['ruolo'] = agente.get('Ruolo', 'agente')  # default = agente
+                # Risposta JSON se arriva da JS
+                if request.is_json:
+                    return jsonify({"message": "Login riuscito", "ruolo": session['ruolo']}), 200
+                # Oppure redirect se arriva da form
+                return redirect("/")
+
+       # Se login fallisce
+        if request.is_json:
+            return jsonify({"message": "Credenziali errate"}), 401
+        else:
+            return render_template("login.html", errore="Credenziali errate")
+
+    # Se metodo GET, mostra la pagina login
+    return render_template("login.html")
+
 
 # Definisce la route GET per il logout.
 @app.route("/logout")
 def logout():
     # Rimuove il codice agente dalla sessione se presente.
     session.pop('agente', None)
+    session.pop('ruolo', None)
     # Reindirizza l’utente alla home page dopo il logout.
     return redirect("/")
 
@@ -125,6 +152,8 @@ def dati_agente():
 
     # Recupera il codice agente dalla sessione e tutti i record dal foglio "Agenti".
     codice = session['agente']
+    ruolo = session.get("ruolo", "agente")
+
     agenti = agenti_sheet.get_all_records()
 
     # Cerca l’agente nel foglio e restituisce: Il nome completo - Il codice
@@ -132,14 +161,32 @@ def dati_agente():
         if agente['Codice_Agente'] == codice:
             return jsonify({
                 "nome_completo": agente.get("Nome", ""),
-                "codice": codice
+                "codice": codice,
+                "ruolo": ruolo
             })
-    # Se non trova l'agente nella lista, restituisce errore HTTP 404.
-    return jsonify({"message": "Agente non trovato"}), 404
+    # Se è admin, restituisci un profilo fittizio
+    if ruolo == "admin":
+        return jsonify({
+            "nome_completo": "Amministratore",
+            "codice": "ADMIN",
+            "ruolo": "admin"
+        })
+
+    return jsonify({"message": "Utente non trovato"}), 404
 
 # -------------------------------------------------------------------
 #  B) GESTIONE CLIENTI
 # -------------------------------------------------------------------
+
+@app.route("/clienti-admin")
+def get_clienti_admin():
+    if 'agente' not in session or session.get("ruolo") != "admin":
+        return jsonify({"message": "Non autorizzato"}), 401
+
+    records = clienti_sheet.get_all_records()
+    return jsonify(records)  # ← Ordine inverso
+
+
 @app.route("/clienti", methods=["GET"])
 def get_clienti():
     codice_agente = session.get('agente')
@@ -178,7 +225,7 @@ def add_cliente():
         data.get("Categoria"),
         data.get("Email"),          
         data.get("Telefono"),
-        data.get("Città"),
+        data.get("Citta"),
         data.get("Provincia"),
         data.get("Stato"),          
         "",                          
@@ -203,15 +250,108 @@ def aggiorna_cliente(id_cliente):
     for idx, cliente in enumerate(tutti):
         if cliente["ID_Cliente"] == id_cliente and cliente["Agente"] == session['agente']:
             riga_excel = idx + 2  # +2 = salto intestazione e base1
+
+            # 🔁 Aggiorna tutti i campi
             clienti_sheet.update(f"B{riga_excel}", [[data["Nome"]]])
+            clienti_sheet.update(f"C{riga_excel}", [[data["Categoria"]]])
             clienti_sheet.update(f"D{riga_excel}", [[data["Email"]]])
             clienti_sheet.update(f"E{riga_excel}", [[data["Telefono"]]])
             clienti_sheet.update(f"F{riga_excel}", [[data["Città"]]])
             clienti_sheet.update(f"G{riga_excel}", [[data["Provincia"]]])
             clienti_sheet.update(f"H{riga_excel}", [[data["Stato"]]])
+            clienti_sheet.update(f"J{riga_excel}", [[data["POD_PDR"]]])
+            clienti_sheet.update(f"K{riga_excel}", [[data["Settore"]]])
+            clienti_sheet.update(f"L{riga_excel}", [[data["Nuovo_Fornitore"]]])
+            clienti_sheet.update(f"M{riga_excel}", [[data["Codice_Fiscale"]]])
+            clienti_sheet.update(f"N{riga_excel}", [[data["Partita_IVA"]]])
+
             return jsonify({"message": "Cliente aggiornato correttamente"}), 200
 
     return jsonify({"message": "Cliente non trovato"}), 404
+
+
+@app.route("/admin/clienti/<id_cliente>", methods=["PUT"])
+def admin_modifica_cliente(id_cliente):
+    if 'agente' not in session or session.get("ruolo") != "admin":
+        return jsonify({"message": "Non autorizzato"}), 401
+
+    data = request.json
+    tutti = clienti_sheet.get_all_records()
+
+    for idx, cliente in enumerate(tutti):
+        if cliente["ID_Cliente"] == id_cliente:
+            riga_excel = idx + 2  # +2 = salta intestazione
+
+            try:
+                clienti_sheet.update(f"B{riga_excel}", [[data["Nome"]]])
+                clienti_sheet.update(f"C{riga_excel}", [[data["Categoria"]]])
+                clienti_sheet.update(f"D{riga_excel}", [[data["Email"]]])
+                clienti_sheet.update(f"E{riga_excel}", [[data["Telefono"]]])
+                clienti_sheet.update(f"F{riga_excel}", [[data["Città"]]])
+                clienti_sheet.update(f"G{riga_excel}", [[data["Provincia"]]])
+                clienti_sheet.update(f"H{riga_excel}", [[data["Stato"]]])
+                clienti_sheet.update(f"J{riga_excel}", [[data["POD_PDR"]]])
+                clienti_sheet.update(f"K{riga_excel}", [[data["Settore"]]])
+                clienti_sheet.update(f"L{riga_excel}", [[data["Nuovo_Fornitore"]]])
+                clienti_sheet.update(f"M{riga_excel}", [[data["Codice_Fiscale"]]])
+                clienti_sheet.update(f"N{riga_excel}", [[data["Partita_IVA"]]])
+
+                return jsonify({"message": "Cliente aggiornato correttamente (admin)"}), 200
+
+            except Exception as e:
+                print("❌ Errore durante aggiornamento admin:", e)
+                return jsonify({"error": str(e)}), 500
+
+    return jsonify({"message": "Cliente non trovato"}), 404
+
+
+
+@app.route("/clienti/<id_cliente>", methods=["DELETE"])
+def elimina_cliente(id_cliente):
+    if 'agente' not in session:
+        return jsonify({"message": "Non autenticato"}), 401
+
+    tutti = clienti_sheet.get_all_records()
+    for idx, cliente in enumerate(tutti):
+        if cliente["ID_Cliente"] == id_cliente and cliente["Agente"] == session['agente']:
+            riga_excel = idx + 2
+            clienti_sheet.delete_rows(riga_excel)
+
+            # 🔁 ELIMINA cartella su Google Drive
+            try:
+                query = (f"name='{id_cliente}' and mimeType='application/vnd.google-apps.folder' "
+                         f"and '{main_folder_id}' in parents and trashed=false")
+                results = drive_service.files().list(
+                    q=query, spaces='drive', fields="files(id)").execute()
+                folders = results.get('files', [])
+                if folders:
+                    folder_id = folders[0]['id']
+                    drive_service.files().delete(fileId=folder_id).execute()
+                    print(f"✅ Cartella Drive eliminata per cliente {id_cliente} (ID: {folder_id})")
+                else:
+                    print(f"ℹ️ Nessuna cartella trovata per cliente {id_cliente}")
+            except Exception as e:
+                print("⚠️ Errore durante eliminazione cartella Drive:", e)
+
+            # 🔁 ELIMINA righe dal foglio File_Allegati
+            try:
+                log_records = filelog_sheet.get_all_records()
+                righe_da_eliminare = [i + 2 for i, r in enumerate(log_records) if r.get("ID_Cliente") == id_cliente]
+
+                for i in reversed(righe_da_eliminare):
+                    filelog_sheet.delete_rows(i)
+
+                print(f"🗑️ Righe eliminate dal log File_Allegati per cliente {id_cliente}: {len(righe_da_eliminare)}")
+
+            except Exception as e:
+                print("⚠️ Errore durante eliminazione righe File_Allegati:", e)
+
+            return jsonify({"message": "Cliente e documenti eliminati correttamente"}), 200
+
+    return jsonify({"message": "Cliente non trovato"}), 404
+
+
+
 
 # -------------------------------------------------------------------
 #  C) GESTIONE INTERAZIONI
@@ -229,44 +369,43 @@ def get_interazioni(id_cliente):
     return jsonify(interazioni_cliente)
 
 @app.route("/interazioni", methods=["POST"])
-def add_interazione():
+def aggiungi_interazione():
     if 'agente' not in session:
         return jsonify({"message": "Non autenticato"}), 401
 
     data = request.json
-    codice_agente = session['agente']
+    id_cliente = data.get("ID_Cliente")
+    tipo = data.get("Tipo")
+    esito = data.get("Esito")
+    descrizione = data.get("Descrizione", "").strip()
 
-    # Data (formato gg/mm/aaaa)
-    data_raw = data.get("Data", datetime.today().strftime("%Y-%m-%d"))
-    try:
-        data_obj = datetime.strptime(data_raw, "%Y-%m-%d")
-        data_formattata = data_obj.strftime("%d/%m/%Y")
-    except:
-        data_formattata = data_raw
+    if not id_cliente or not tipo or not esito:
+        return jsonify({"message": "Campi obbligatori mancanti"}), 400
 
-    # Calcolo nuovo ID_Interazione
-    records = interazioni_sheet.get_all_records()
-    nuovo_id = f"I{len(records) + 1:03d}"
+    # Calcola nuovo ID_Interazione
+    tutte = interazioni_sheet.get_all_records()
+    nuovo_id = f"I{len(tutte)+1:04d}"
 
-    new_row = [
-        nuovo_id,                    
-        data.get("Nome"),           
-        data.get("Categoria"),
-        data.get("Email"),          
-        data.get("Telefono"),
-        data.get("Citta"),
-        data.get("Provincia"),
-        data.get("Stato"),          
-        "",                          
-        data.get("POD_PDR"),
-        data.get("Settore"),
-        data.get("Nuovo_Fornitore"),
-        data.get("Codice_Fiscale"),
-        data.get("Partita_IVA"),
-        codice_agente              
+    data_interazione = data.get("Data")
+    if not data_interazione:
+        data_interazione = datetime.now().strftime("%d/%m/%Y")
+
+    agente = session['agente']
+
+    nuova_riga = [
+        nuovo_id,
+        id_cliente,
+        agente,
+        data_interazione,
+        tipo,
+        esito,
+        descrizione
     ]
-    interazioni_sheet.append_row(new_row)
-    return jsonify({"message": f"Interazione {nuovo_id} aggiunta"}), 201
+
+    interazioni_sheet.append_row(nuova_riga)
+
+    return jsonify({"message": "Interazione salvata con successo", "ID": nuovo_id})
+
 
 # -------------------------------------------------------------------
 #  D) GESTIONE DOCUMENTI
@@ -281,6 +420,7 @@ def upload_file(id_cliente):
     file = request.files['file']
     filename = file.filename
     codice_agente = session['agente']
+    ruolo = request.form.get("ruolo", "agente").lower().strip()
     data_oggi = datetime.today().strftime("%d/%m/%Y")
 
     # Trova o crea cartella del cliente su Drive
@@ -321,7 +461,7 @@ def upload_file(id_cliente):
 
     file_id = uploaded.get("id")
 
-    # 🔓 Rendi il file visibile pubblicamente (permessi + published)
+    # 🔓 Rendi il file visibile pubblicamente
     drive_service.permissions().create(
         fileId=file_id,
         body={
@@ -331,29 +471,34 @@ def upload_file(id_cliente):
         }
     ).execute()
 
-
     # Pulizia file temporaneo
     try:
         os.remove(temp_path)
     except Exception as e:
         print("⚠️ Impossibile eliminare il file temporaneo:", e)
 
-    # Log su File_Allegati
+    # Log su File_Allegati con ruolo e notifiche incrociate
     try:
+        caricato_da = "ADMIN" if ruolo == "admin" else "AGENTE"
+        letto = "FALSE"  # nuovo campo unico
+
         print("✅ Registro file:", file_id, id_cliente, filename, codice_agente, data_oggi)
         filelog_sheet.append_row([
-            file_id,
+            file_id,            # ID Google Drive
             id_cliente,
             filename,
             codice_agente,
             data_oggi,
-            "In attesa"
+            "In attesa",        # stato
+            caricato_da,        # "ADMIN" o "AGENTE"
+            letto               # 🔁 unico campo
         ])
     except Exception as e:
         print("❌ Errore durante la scrittura su File_Allegati:", str(e))
         return jsonify({"message": "File caricato, ma errore nel log", "error": str(e)}), 500
 
     return jsonify({"message": "File caricato e registrato correttamente"})
+
 
 @app.route("/files/<id_cliente>", methods=["GET"])
 def get_files(id_cliente):
@@ -396,72 +541,129 @@ def get_files(id_cliente):
 
     return jsonify(file_links)
 
-@app.route("/file/<file_id>", methods=["DELETE"])
-def delete_file(file_id):
-    if 'agente' not in session:
+@app.route("/file/<file_id>", methods=["DELETE"])                         # Quando viene effettuata una richiesta DELETE all'URL /file/qualcosa, questa funzione viene chiamata. Il file_id è il parametro (ID del file su Google Drive).
+def delete_file(file_id):                                                 # ...>
+    if 'agente' not in session:                                           # Verifica che l'utente sia autenticato (loggato come agente). Se no, restituisce errore 401.
+        return jsonify({"message": "Non autenticato"}), 401               # ...>
+
+        agente = session['agente']
+        is_admin = agente.get("ruolo", "").upper() == "ADMIN"  # ✅ Verifica se l'utente è Admin
+    
+    try:
+            agente = session.get('agente', {})
+            is_admin = isinstance(agente, dict) and agente.get("ruolo", "").strip().lower() == "admin"
+                                                                # Recupera tutti i record del foglio Google "File_Allegati".
+            log_records = filelog_sheet.get_all_records()                       # ...>
+            for idx, r in enumerate(log_records):                               # Cerca nel foglio il record corrispondente all’ID del file passato nella richiesta. idx serve a calcolare la riga corretta per l'aggiornamento.
+                if r['ID_File'].strip() == file_id.strip():                     # ...>
+                    stato_corrente = r.get("Stato", "").strip().lower()         # Se il file è stato approvato, non può essere eliminato (controllo di sicurezza). Restituisce errore 403 (forbidden).
+                
+                    # ⛔ Blocca solo se NON sei admin e il file è approvato
+                    if stato_corrente == "approvato" and not is_admin:                                                      # ...
+                        return jsonify({"message": "File approvato. Non può essere eliminato."}), 403       # ...>
+
+                    # ✅ Elimina da Drive
+                    try:                                                                    # Se non è approvato, elimina fisicamente il file da Google Drive tramite le API.
+                        drive_service.files().delete(fileId=file_id).execute()              # ...>
+                    except Exception as e:                                                                                  # Se qualcosa va storto con l'API Google Drive, invia un messaggio di errore 500.
+                        return jsonify({"message": "Errore durante l'eliminazione da Drive", "error": str(e)}), 500         # ...>
+
+                    # ✅ Aggiorna colonna "Stato" con "ELIMINATO"
+                    riga_excel = idx + 2  # intestazione + base 1                               # Se il file viene eliminato con successo, aggiorna la colonna "Stato" (colonna F) nel foglio Google, scrivendo "ELIMINATO" nella riga corrispondente.
+                    colonna_stato = 6     # colonna F                                           # ...
+                    filelog_sheet.update_cell(riga_excel, colonna_stato, "ELIMINATO")           # ...>
+
+                    return jsonify({"message": "File eliminato e stato aggiornato"}), 200       # Tutto ok → restituisce messaggio di successo.
+
+            return jsonify({"message": "File non trovato nel log"}), 404                        # Nessun file trovato con quell’ID → errore 404.
+
+    except Exception as e:                                                                  # Qualsiasi altro errore generale viene catturato e restituito come errore 500.
+        return jsonify({"message": "Errore imprevisto", "error": str(e)}), 500              # ...>
+
+
+# Questa route non esegue alcun controllo sul ruolo o stato del file: elimina e basta, solo se è raggiunta da chi la conosce (cioè la modale Admin).
+@app.route("/admin/elimina-file/<file_id>", methods=["DELETE"])
+def delete_file_admin(file_id):
+    print("➡️ ADMIN: richiesta di eliminazione per file:", file_id)
+
+    if "agente" not in session:
         return jsonify({"message": "Non autenticato"}), 401
 
     try:
         log_records = filelog_sheet.get_all_records()
         for idx, r in enumerate(log_records):
-            if r['ID_File'].strip() == file_id.strip():
-                stato_corrente = r.get("Stato", "").strip().lower()
-                if stato_corrente == "approvato":
-                    return jsonify({"message": "File approvato. Non può essere eliminato."}), 403
+            if r.get('ID_File', '').strip() == file_id.strip():
+                print(f"🗑 Eliminazione da Google Drive: {file_id}")
 
-                # ✅ Elimina da Drive
+                # Elimina da Drive
                 try:
                     drive_service.files().delete(fileId=file_id).execute()
                 except Exception as e:
+                    print("❌ Errore Drive:", e)
                     return jsonify({"message": "Errore durante l'eliminazione da Drive", "error": str(e)}), 500
 
-                # ✅ Aggiorna colonna "Stato" con "ELIMINATO"
-                riga_excel = idx + 2  # intestazione + base 1
-                colonna_stato = 6     # colonna F
-                filelog_sheet.update_cell(riga_excel, colonna_stato, "ELIMINATO")
+                # Aggiorna foglio
+                filelog_sheet.update_cell(idx + 2, 6, "ELIMINATO")
+                return jsonify({"message": "File eliminato (admin)"}), 200
 
-                return jsonify({"message": "File eliminato e stato aggiornato"}), 200
-
+        print("⚠️ File non trovato nel log")
         return jsonify({"message": "File non trovato nel log"}), 404
 
     except Exception as e:
+        print("❌ ERRORE ADMIN DELETE FILE:", e)
         return jsonify({"message": "Errore imprevisto", "error": str(e)}), 500
 
+
+
 # ✅ CORRETTO: route a livello principale
-@app.route("/conteggio-documenti", methods=["GET"])
-def conteggio_documenti():
-    if 'agente' not in session:
-        return jsonify({"message": "Non autenticato"}), 401
+@app.route("/conteggio-documenti", methods=["GET"])                                 # Crea una route HTTP GET all’indirizzo /conteggio-documenti.
+def conteggio_documenti():                                                          # Definisce la funzione che verrà eseguita quando si visita l’endpoint.
+    if 'agente' not in session:                                                     # Verifica che l’agente sia autenticato. Se no, restituisce un errore 401 Unauthorized.
+        return jsonify({"message": "Non autenticato"}), 401                         # ...>
 
-    log_records = filelog_sheet.get_all_records()
-    conteggi = {}
+    log_records = filelog_sheet.get_all_records()                                   #  Recupera tutti i record dal foglio File_Allegati. Ogni riga corrisponde a un file caricato da un agente o da un admin.
+    conteggi = {}                                                                   # Crea un dizionario vuoto dove salveremo quanti file ha ogni cliente.
 
-    for r in log_records:
-        id_cliente = r.get("ID_Cliente", "").strip()
-        stato = r.get("Stato", "").strip().upper()
-        if id_cliente and stato != "ELIMINATO":
-            conteggi[id_cliente] = conteggi.get(id_cliente, 0) + 1
+    for r in log_records:                                                           # Cicla tutte le righe della tabella File_Allegati.
+        id_cliente = r.get("ID_Cliente", "").strip()                                # Estrae l'ID del cliente e lo stato del file (es. "In attesa", "Approvato", "ELIMINATO"), rimuovendo spazi e forzando tutto in maiuscolo.
+        stato = r.get("Stato", "").strip().upper()                                  # ...>
+        if id_cliente and stato != "ELIMINATO":                                     # Considera solo i file non eliminati (quindi quelli validi e visibili).
+            conteggi[id_cliente] = conteggi.get(id_cliente, 0) + 1                  # Aggiorna il conteggio per l’ID_Cliente. Se non c’è ancora nel dizionario, parte da 0.
 
-    return jsonify(conteggi)
+    return jsonify(conteggi)                                                        # Restituisce il dizionario come risposta JSON, utilizzabile in JavaScript per mostrare i numeri accanto al pulsante "📎 Documenti".
 
 @app.route("/notifiche-non-letto", methods=["GET"])
 def notifiche_non_lette():
     if 'agente' not in session:
         return jsonify({"message": "Non autenticato"}), 401
 
-    agente = session['agente']
+    ruolo = session.get("ruolo", "agente").lower()
+    codice_agente = session.get("agente")
     log_records = filelog_sheet.get_all_records()
+    clienti_records = clienti_sheet.get_all_records()
+
+    clienti_agente = [r["ID_Cliente"] for r in clienti_records if r.get("Agente") == codice_agente]
     clienti_con_notifiche = set()
 
     for r in log_records:
+        id_cliente = r.get("ID_Cliente")
+        caricato_da = r.get("Caricato_da", "").strip().upper()
+        letto = r.get("Letto", "").strip().upper()
+
+        if ruolo != "admin" and id_cliente not in clienti_agente:
+            continue
+
+        # Admin vede notifiche se file caricato da AGENTE
+        # Agente vede notifiche se file caricato da ADMIN
         if (
-            r.get("ID_Agente") == agente and
-            r.get("Caricato_da", "").strip().upper() == "ADMIN" and
-            r.get("Letto_da_Agente", "").strip().upper() != "TRUE"
+            (ruolo == "admin" and caricato_da == "AGENTE" and letto != "TRUE") or
+            (ruolo == "agente" and caricato_da == "ADMIN" and letto != "TRUE")
         ):
-            clienti_con_notifiche.add(r.get("ID_Cliente"))
+            clienti_con_notifiche.add(id_cliente)
 
     return jsonify(list(clienti_con_notifiche))
+
+
 
 # -------------------------------------------------------------------
 #  D1) UPLOAD FILE DA ADMIN
@@ -470,13 +672,6 @@ def notifiche_non_lette():
 @app.route("/admin-upload")
 def pagina_admin_upload():
     return send_from_directory(app.static_folder, "admin_upload.html")
-
-
-# Ritorna tutti i clienti (visibili all’admin)
-@app.route("/clienti-admin")
-def get_clienti_admin():
-    records = clienti_sheet.get_all_records()
-    return jsonify(records)
 
 
 # Admin carica un file
@@ -546,18 +741,36 @@ def admin_upload_file(id_cliente):
             filename,
             agente_cliente,
             data_oggi,
-            "In attesa",
-            "ADMIN",
-            "FALSE"
+            "Approvato",       # ✅ Stato
+            "ADMIN",           # ✅ Caricato_da
+            "FALSE"            # ✅ Letto_da_Agente
         ])
     except Exception as e:
         return jsonify({"message": "File caricato, ma errore nel log", "error": str(e)}), 500
 
     return jsonify({"message": "File caricato correttamente da Admin"})
 
+# APPROVA FILE
+@app.route("/approva-file/<file_id>", methods=["POST"])
+def approva_file(file_id):
+    if 'agente' not in session or session.get("ruolo") != "admin":
+        return jsonify({"message": "Non autorizzato"}), 401
+
+    try:
+        log_records = filelog_sheet.get_all_records()
+        for idx, r in enumerate(log_records):
+            if r['ID_File'].strip() == file_id.strip():
+                riga_excel = idx + 2
+                filelog_sheet.update_cell(riga_excel, 6, "Approvato")  # Colonna F = Stato
+                return jsonify({"message": "File approvato con successo"})
+        return jsonify({"message": "File non trovato"}), 404
+
+    except Exception as e:
+        return jsonify({"message": "Errore imprevisto", "error": str(e)}), 500
+
 
 # -------------------------------------------------------------------
-#  E) GESTIONE STATI, TIPI, ESITI, SETTORE (Impostazioni)
+#  E) GESTIONE STATI, TIPI, ESITI (Impostazioni)
 # -------------------------------------------------------------------
 @app.route("/stati-cliente", methods=["GET"])
 def get_stati_cliente():
@@ -586,12 +799,22 @@ def get_esiti_interazione():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route("/settori-interazione", methods=["GET"])
-def get_settori_interazione():
+
+@app.route("/categorie", methods=["GET"])
+def get_categorie():
     try:
         valori = impostazioni_sheet.col_values(4)
-        esiti = [v for v in valori if v.lower() != "settore_interazione" and v.strip() != ""]
-        return jsonify(esiti)
+        categorie = [v for v in valori if v.lower() != "categoria" and v.strip() != ""]
+        return jsonify(categorie)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/settori", methods=["GET"])
+def get_settori():
+    try:
+        valori = impostazioni_sheet.col_values(5)
+        settori = [v for v in valori if v.lower() != "settore" and v.strip() != ""]
+        return jsonify(settori)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -599,39 +822,248 @@ def get_settori_interazione():
 #  F) Quando l’agente apre i documenti → aggiorna
 # -------------------------------------------------------------------
 @app.route("/files/segna-letti/<id_cliente>", methods=["POST"])
-def segna_letti_da_agente(id_cliente):
-    if 'agente' not in session:
+def segna_letti(id_cliente):
+    if "agente" not in session:
         return jsonify({"message": "Non autenticato"}), 401
 
-    codice_agente = session['agente']
-    log_records = filelog_sheet.get_all_records()
+    ruolo = session.get("ruolo", "agente").lower()
+    logs = filelog_sheet.get_all_records()
 
-    for idx, row in enumerate(log_records):
-        if (row.get("ID_Cliente") == id_cliente and
-            row.get("Caricato_da") == "ADMIN" and
-            row.get("Letto_da_Agente", "").strip().upper() != "TRUE" and
-            row.get("ID_Agente") == codice_agente):
+    for idx, row in enumerate(logs):
+        if row.get("ID_Cliente") != id_cliente:
+            continue
 
-            riga_excel = idx + 2
-            filelog_sheet.update(f"H{riga_excel}", [["TRUE"]])  # colonna H = Letto_da_Agente
+        caricato_da = row.get("Caricato_da", "").strip().upper()
+        letto = row.get("Letto", "").strip().upper()
 
-    return jsonify({"message": "Aggiornamento completato"})
+        # Evita di marcare come letto i file caricati dallo stesso ruolo
+        if (
+            (ruolo == "admin" and caricato_da == "AGENTE") or
+            (ruolo == "agente" and caricato_da == "ADMIN")
+        ):
+            if letto != "TRUE":
+                filelog_sheet.update_cell(idx + 2, 8, "TRUE")  # colonna "Letto"
+
+    return jsonify({"message": "Notifiche segnate come lette"})
+
+
 
 
 # -------------------------------------------------------------------
 #  F) ROUTE PRINCIPALI DI AVVIO
 # -------------------------------------------------------------------
-@app.route("/")
-def serve_login():
-    return send_from_directory(app.static_folder, "login.html")
 
-@app.route("/index.html")
-def serve_index():
+# Controlla che l’agente sia loggato
+@app.route('/')
+def home():
     if 'agente' not in session:
-        return redirect("/")
-    return send_from_directory(app.static_folder, "index.html")
+        return redirect("/login") # Altrimenti reindirizza al login
+    
+    # Se è un admin, lo rimanda alla pagina admin
+    if session.get("ruolo") == "admin":
+        return redirect("/admin")
+
+    # Altrimenti carica i clienti dell'agente
+    codice_agente = session['agente']
+    records = clienti_sheet.get_all_records()
+    clienti = [c for c in records if str(c.get("Agente")) == codice_agente][::-1]
+
+    # Carica index.html con i clienti filtrati
+    return render_template('index.html', clienti=clienti)
+
+# Verifica che ci sia un agente loggato e che abbia ruolo admin
+@app.route("/admin")
+def pagina_admin():
+    # Verifica che l'utente sia loggato e sia un admin
+    if 'agente' not in session or session.get('ruolo') != 'admin':
+        return redirect("/login")  # Reindirizza se non autorizzato
+    
+    # Mostra la pagina admin.html per l’interfaccia dedicata
+    return render_template("admin.html")
 
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+
+# -------------------------------------------------------------------
+#  G) PROVVIGIONI
+# -------------------------------------------------------------------
+@app.route("/provvigioni", methods=["GET"])
+def get_provvigioni():
+    if 'agente' not in session:
+        return jsonify({"message": "Non autenticato"}), 401
+
+    codice_agente = session['agente']
+    clienti = clienti_sheet.get_all_records()
+    clienti = clienti_sheet.get_all_records(value_render_option='UNFORMATTED_VALUE')
+
+    # Filtro solo i clienti dell'agente con provvigione valorizzata
+    risultati = []
+    for cliente in clienti:
+        if cliente.get("Agente") == codice_agente and cliente.get("Provvigione"):
+            risultato = {
+                #"Competenza": datetime.today().strftime("%m/%Y"),
+                "Competenza": cliente.get("Competenza"),
+                "ID_Cliente": cliente.get("ID_Cliente"),
+                "Nome": cliente.get("Nome"),
+                "Categoria": cliente.get("Categoria"),
+                "Stato": cliente.get("Stato"),
+                "Settore": cliente.get("Settore"),
+                "Nuovo_Fornitore": cliente.get("Nuovo_Fornitore"),
+                "Provvigione": cliente.get("Provvigione"),
+                "Modificabile": cliente.get("Stato") != "Contratto ATTIVATO"
+            }
+            risultati.append(risultato)
+
+    return jsonify(risultati)
+
+@app.route("/pagina-provvigioni")
+def pagina_provvigioni():
+    return render_template("provvigioni.html")
+
+# --- Provvigioni ADMIN ---
+@app.route("/provvigioni-admin")
+def pagina_provvigioni_admin():
+    if 'agente' not in session or session.get("ruolo", "").strip().lower() != "admin":
+        return redirect("/login")
+
+    return render_template("provvigioni-admin.html")
+
+@app.route("/provvigioni-tutte", methods=["GET"])
+def get_provvigioni_admin():
+    if session.get("ruolo", "").strip().lower() != "admin":
+        return jsonify({"message": "Non autorizzato"}), 401
+
+    clienti = clienti_sheet.get_all_records()
+    clienti = clienti_sheet.get_all_records(value_render_option='UNFORMATTED_VALUE')
+    risultati = []
+
+    for cliente in clienti:
+        #if cliente.get("Provvigione"):
+            risultato = {
+                #"Competenza": datetime.today().strftime("%m/%Y"),
+                "Competenza": cliente.get("Competenza"),
+                "ID_Cliente": cliente.get("ID_Cliente"),
+                "Nome": cliente.get("Nome"),
+                "Categoria": cliente.get("Categoria"),
+                "Stato": cliente.get("Stato"),
+                "Settore": cliente.get("Settore"),
+                "Nuovo_Fornitore": cliente.get("Nuovo_Fornitore"),
+                "Provvigione": cliente.get("Provvigione"),
+                "Agente": cliente.get("Agente"),
+                "Modificabile": cliente.get("Stato") != "Contratto ATTIVATO"
+            }
+            risultati.append(risultato)
+
+    return jsonify(risultati)
+
+
+# Salva le modifiche apportate nella tabella Provvigioni
+
+@app.route("/admin/provvigioni/<id_cliente>", methods=["PUT"])
+def aggiorna_provvigione_admin(id_cliente):
+    if session.get("ruolo", "").strip().lower() != "admin":
+        return jsonify({"message": "Non autorizzato"}), 401
+
+    dati = request.get_json()
+    clienti = clienti_sheet.get_all_records()
+
+    for idx, cliente in enumerate(clienti):
+        if cliente["ID_Cliente"] == id_cliente:
+            riga = idx + 2  # +2 = salta intestazione (base 1)
+            try:
+                clienti_sheet.update(f"P{riga}", [[dati["Competenza"]]])  # colonna I: Competenza
+                clienti_sheet.update(f"I{riga}", [[dati["Provvigione"]]])  # colonna O: Provvigione
+                return jsonify({"message": "Dati aggiornati"}), 200
+            except Exception as e:
+                print("❌ Errore aggiornamento:", e)
+                return jsonify({"error": str(e)}), 500
+
+    return jsonify({"message": "Cliente non trovato"}), 404
+
+# -------------------------------------------------------------------
+#  H) GRAFICO RENDIMENTO
+# -------------------------------------------------------------------
+@app.route("/api/rendimento")
+def rendimento_agenti():
+    if "agente" not in session or session.get("ruolo", "").strip().lower() != "admin":
+        return jsonify({"message": "Non autorizzato"}), 401
+
+    mese = request.args.get("mese")  # può essere vuoto!
+    anno = request.args.get("anno")
+
+    if not anno:
+        return jsonify({"message": "Anno obbligatorio"}), 400
+
+    clienti = clienti_sheet.get_all_records()
+    rendimento = {}
+
+    for cliente in clienti:
+        provvigione = cliente.get("Provvigione")
+        agente = cliente.get("Agente")
+        competenza = cliente.get("Competenza", "").strip()
+
+        if not provvigione or not agente or not competenza:
+            continue
+
+        # ↪️ Separiamo competenza in mese/anno
+        if "/" not in competenza:
+            continue
+
+        mese_comp, anno_comp = competenza.split("/")
+
+        if anno_comp != anno:
+            continue
+
+        if mese and mese_comp != mese:
+            continue  # filtro per mese solo se specificato
+
+        try:
+            provvigione_float = float(str(provvigione).replace(",", "."))
+        except:
+            continue
+
+        # ➕ Se mese è vuoto → aggrega per ogni agente+mese (serve per il grafico annuale)
+        chiave = agente if mese else (agente, mese_comp)
+        rendimento[chiave] = rendimento.get(chiave, 0) + provvigione_float
+
+    # ➤ Output per frontend
+    if mese:
+        # ↪️ grafico per singolo mese → [{agente, totale}]
+        dati = [{"agente": k, "totale": round(v, 2)} for k, v in rendimento.items()]
+    else:
+        # ↪️ grafico annuale → [{agente, mese, totale}]
+        dati = [{"agente": k[0], "mese": k[1], "totale": round(v, 2)} for k, v in rendimento.items()]
+
+    return jsonify(dati)
+
+
+
+# route di accesso protetta
+
+@app.route("/rendimento-agenti")
+def pagina_rendimento_agenti():
+    if 'agente' not in session or session.get('ruolo', '').lower() != 'admin':
+        return redirect("/login")
+    return render_template("rendimento.html")
+
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+#@app.route("/")
+#def serve_login():
+#    return send_from_directory(app.static_folder, "login.html")
+
+#@app.route("/index.html")
+#def serve_index():
+#    if 'agente' not in session:
+#        return redirect("/")
+#    return send_from_directory(app.static_folder, "index.html")
+
+#import os
+
+#if __name__ == "__main__":
+#    port = int(os.environ.get("PORT", 5000))
+#    app.run(host="0.0.0.0", port=port)

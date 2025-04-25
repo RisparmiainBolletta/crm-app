@@ -36,26 +36,26 @@ scope = [
 ]
 
 # Carica le credenziali da una variabile d'ambiente che contiene il JSON delle credenziali
-###credentials_dict = json.loads(os.environ['GOOGLE_APPLICATION_CREDENTIALS_JSON'])
+credentials_dict = json.loads(os.environ['GOOGLE_APPLICATION_CREDENTIALS_JSON'])
 
 # Autenticazione per accedere a Google Sheets
-creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope) ###?
-###creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scope)
+###creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope) ###?
+creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scope)
 client = gspread.authorize(creds)  # Client gspread autenticato
 
 # === 2. CONNESSIONE A GOOGLE DRIVE ===
 
 # Ricarica le stesse credenziali per Google Drive
-###drive_credentials_dict = json.loads(os.environ['GOOGLE_APPLICATION_CREDENTIALS_JSON'])
+drive_credentials_dict = json.loads(os.environ['GOOGLE_APPLICATION_CREDENTIALS_JSON'])
 
 # Usa la nuova libreria google.oauth2 per autenticarsi con Drive
-###drive_creds = service_account.Credentials.from_service_account_info(
-###    drive_credentials_dict,
-###    scopes=['https://www.googleapis.com/auth/drive']  # Scope necessario per accedere e gestire file su Drive
-###)
-drive_creds = service_account.Credentials.from_service_account_file(        ###?
-    'credentials.json', scopes=['https://www.googleapis.com/auth/drive']    ###?
-)                                                                           ###?
+drive_creds = service_account.Credentials.from_service_account_info(
+    drive_credentials_dict,
+    scopes=['https://www.googleapis.com/auth/drive']  # Scope necessario per accedere e gestire file su Drive
+)
+###drive_creds = service_account.Credentials.from_service_account_file(        ###?
+###    'credentials.json', scopes=['https://www.googleapis.com/auth/drive']    ###?
+###)                                                                           ###?
 
 # Crea il client per l'API Drive
 drive_service = build('drive', 'v3', credentials=drive_creds)

@@ -993,13 +993,36 @@ def rendimento_agenti():
     if not anno:
         return jsonify({"message": "Anno obbligatorio"}), 400
 
-    clienti = clienti_sheet.get_all_records()
+    clienti = clienti_sheet.get_all_records(value_render_option='UNFORMATTED_VALUE')
     rendimento = {}
+
+    print("\n📊 Diagnostica colonne Provvigione / Competenza")
 
     for cliente in clienti:
         provvigione = cliente.get("Provvigione")
         agente = cliente.get("Agente")
-        competenza = cliente.get("Competenza", "").strip()
+        from datetime import datetime, date
+
+        # ...
+        comp_raw = cliente.get("Competenza", "")
+        if isinstance(comp_raw, (datetime, date)):
+            competenza = comp_raw.strftime("%m/%Y")  # ↩️ es: 04/2025
+        else:
+            competenza = str(comp_raw).strip()
+
+        import datetime
+
+        if isinstance(comp_raw, (datetime.datetime, datetime.date)):
+            competenza = comp_raw.strftime("%m/%Y")
+        elif isinstance(comp_raw, int):
+            # Supporta date Google Sheets seriali
+            base_date = datetime.date(1899, 12, 30)
+            data_comp = base_date + datetime.timedelta(days=comp_raw)
+            competenza = data_comp.strftime("%m/%Y")
+        else:
+            competenza = str(comp_raw).strip()
+
+
 
         if not provvigione or not agente or not competenza:
             continue

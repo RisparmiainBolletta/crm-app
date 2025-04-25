@@ -685,7 +685,7 @@ def admin_upload_file(id_cliente):
     data_oggi = datetime.today().strftime("%d/%m/%Y")
 
     # Trova ID_Agente del cliente
-    clienti = clienti_sheet.get_all_records()
+    clienti = clienti_sheet.get_all_records(value_render_option='UNFORMATTED_VALUE')
     agente_cliente = next((c["Agente"] for c in clienti if c["ID_Cliente"] == id_cliente), None)
 
     if not agente_cliente:

@@ -1,0 +1,33 @@
+﻿<!-- rendimento.html -->
+{% extends "base.html" %}
+
+{% block title %}Rendimento Agenti{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 style="margin-top: 20px;">📈 Rendimento Agenti</h2>
+    <p>Visualizza l'andamento delle provvigioni maturate per ciascun agente.</p>
+
+    <div class="filtro-rendimento" style="margin-bottom: 20px;">
+        <label for="mese">Mese:</label>
+        <select id="filtro-mese">
+            <option value="">-- Tutti i mesi --</option>
+        </select>
+
+        <label for="filtro-anno">Anno:</label>
+        <select id="filtro-anno"></select>
+
+        <button id="btn-filtra" class="btn-primario">Filtra</button>
+    </div>
+
+    <canvas id="grafico-rendimento" class="grafico-rendimento"></canvas>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/rendimento.js') }}"></script>
+{% endblock %}
+

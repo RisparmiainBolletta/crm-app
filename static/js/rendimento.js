@@ -1,4 +1,4 @@
-﻿// rendimento.js
+// rendimento.js
 
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -44,91 +44,66 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(data => {
                 if (chart) chart.destroy();
 
-                if (mese) {
-                    // ➤ Caso Mese + Anno: Provvigioni per agente
-                    const labels = data.map(r => r.agente);
-                    const valori = data.map(r => parseFloat(r.totale));
+                // ✅ Conversione sicura come in provvigioni.js
+                const valori = data.map(r => {
+                    const testo = r.totale?.toString().replace(",", ".");
+                    const num = parseFloat(testo);
+                    return isNaN(num) ? 0 : num;
+                });
 
-                    chart = new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                label: `Provvigioni totali - ${mese}/${anno}`,
-                                data: valori,
-                                backgroundColor: '#4DA6FF'
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: { display: false },
-                                tooltip: {
-                                    callbacks: {
-                                        label: ctx => `€ ${ctx.raw.toFixed(2)}`
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        callback: v => v.toLocaleString("it-IT", {
-                                            style: "currency",
-                                            currency: "EUR",
-                                            minimumFractionDigits: 2
-                                        })
-                                    }
-                                }
-                            }
+                const labels = mese
+                    ? data.map(r => r.agente)
+                    : data.map(r => `${r.agente} - ${r.mese}`);
 
-                        }
-                    });
-                } else {
-                    // ➤ Caso Solo Anno: Etichetta "AGENTE - MESE"
-                    const labels = data.map(r => `${r.agente} - ${r.mese}`);
-                    const valori = data.map(r => parseFloat(r.totale));
+                const titolo = mese
+                    ? `Provvigioni totali - ${mese}/${anno}`
+                    : `Provvigioni - ${anno}`;
 
-                    chart = new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels,
-                            datasets: [{
-                                label: `Provvigioni - ${anno}`,
-                                data: valori,
-                                backgroundColor: '#4DA6FF'
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                label: ctx => ctx.raw.toLocaleString("it-IT", {
-                                    style: "currency",
-                                    currency: "EUR"
-                                })
-
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        callback: v => v.toLocaleString("it-IT", {
-                                            style: "currency",
-                                            currency: "EUR",
-                                            minimumFractionDigits: 2
-                                        })
-                                    }
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: titolo,
+                            data: valori,
+                            backgroundColor: '#4DA6FF'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => ctx.raw.toLocaleString("it-IT", {
+                                        style: "currency",
+                                        currency: "EUR"
+                                    })
                                 }
                             }
-
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: v => v.toLocaleString("it-IT", {
+                                        style: "currency",
+                                        currency: "EUR",
+                                        minimumFractionDigits: 2
+                                    })
+                                }
+                            }
                         }
-                    });
-                }
+                    }
+                });
             })
             .catch(err => {
-                console.error("Errore nel caricamento del grafico:", err);
+                console.error("❌ Errore nel caricamento del grafico:", err);
             });
     }
+
+
+
 
     // Caricamento iniziale
     caricaDatiRendimento(meseSelect.value, annoSelect.value);

@@ -11,13 +11,13 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 # session: per gestire sessioni utente
 # redirect: per reindirizzare l'utente
 #from flask import request
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 import gspread  # Libreria per interfacciarsi con Google Sheets
 from oauth2client.service_account import ServiceAccountCredentials  # Autenticazione con vecchia API
 from flask_cors import CORS  # Per abilitare le richieste CORS (Cross-Origin Resource Sharing)
 import os  # Per accedere a variabili d’ambiente e funzionalità OS
-from datetime import datetime  # Per gestire date
+
 from google.oauth2 import service_account  # Autenticazione moderna con Google
 from googleapiclient.discovery import build  # Per costruire client per API Google (es. Drive)
 from googleapiclient.http import MediaFileUpload  # Per caricare file su Google Drive
@@ -1001,31 +1001,20 @@ def rendimento_agenti():
     for cliente in clienti:
         provvigione = cliente.get("Provvigione")
         agente = cliente.get("Agente")
-        from datetime import datetime, date
-
-        # ...
         comp_raw = cliente.get("Competenza", "")
+
+        if not provvigione or not agente or not comp_raw:
+            continue
+
+        # ✅ Normalizzazione competenza
         if isinstance(comp_raw, (datetime, date)):
-            competenza = comp_raw.strftime("%m/%Y")  # ↩️ es: 04/2025
-        else:
-            competenza = str(comp_raw).strip()
-
-        import datetime
-
-        if isinstance(comp_raw, (datetime.datetime, datetime.date)):
             competenza = comp_raw.strftime("%m/%Y")
         elif isinstance(comp_raw, int):
-            # Supporta date Google Sheets seriali
-            base_date = datetime.date(1899, 12, 30)
-            data_comp = base_date + datetime.timedelta(days=comp_raw)
+            base_date = date(1899, 12, 30)
+            data_comp = base_date + timedelta(days=comp_raw)
             competenza = data_comp.strftime("%m/%Y")
         else:
             competenza = str(comp_raw).strip()
-
-
-
-        if not provvigione or not agente or not competenza:
-            continue
 
         # ↪️ Separiamo competenza in mese/anno
         if "/" not in competenza:
@@ -1037,28 +1026,23 @@ def rendimento_agenti():
             continue
 
         if mese and mese_comp != mese:
-            continue  # filtro per mese solo se specificato
+            continue
 
         try:
             provvigione_float = float(str(provvigione).replace(",", "."))
         except:
             continue
 
-        # ➕ Se mese è vuoto → aggrega per ogni agente+mese (serve per il grafico annuale)
-        chiave = agente if mese else (agente, mese_comp)
-        rendimento[chiave] = rendimento.get(chiave, 0) + provvigione_float
+        # ➕ Accumula provvigioni per agente e competenza
+        if agente not in rendimento:
+            rendimento[agente] = {}
+        if competenza not in rendimento[agente]:
+            rendimento[agente][competenza] = 0
 
-    # ➤ Output per frontend
-    if mese:
-        # ↪️ grafico per singolo mese → [{agente, totale}]
-        dati = [{"agente": k, "totale": round(v, 2)} for k, v in rendimento.items()]
-    else:
-        # ↪️ grafico annuale → [{agente, mese, totale}]
-        dati = [{"agente": k[0], "mese": k[1], "totale": round(v, 2)} for k, v in rendimento.items()]
+        rendimento[agente][competenza] += provvigione_float
 
-    return jsonify(dati)
-
-
+    # ➤ Output per frontend: rendimento[agente][competenza] = totale
+    return jsonify(rendimento)
 
 # route di accesso protetta
 

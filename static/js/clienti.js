@@ -150,6 +150,8 @@ function renderTabellaClienti(clienti) {
         if (stato === "Contratto ATTIVATO") classeStato = "stato-verde";
         else if (stato === "Revisione documenti") classeStato = "stato-arancione";
         else if (stato === "Esito KO") classeStato = "stato-rosso";
+        else if (stato === "Comparato") classeStato = "stato-giallo";
+        else if (stato === "Da comparare") classeStato = "stato-blu";
 
 
         tr.innerHTML = `
@@ -203,6 +205,5 @@ function renderTabellaClienti(clienti) {
     mostraNotificheNonLette();
     document.dispatchEvent(new CustomEvent("clienti-caricati"));
 }
-
 
 

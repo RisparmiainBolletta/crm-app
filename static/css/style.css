@@ -564,6 +564,21 @@ button {
     font-weight: bold;
 }
 
+.stato-giallo {
+    background-color: #FFED09;
+    color: black;
+    padding: 4px 8px;
+    /*border-radius: 8px;*/
+    font-weight: bold;
+}
+.stato-blu {
+    background-color: #3498db;
+    color: white;
+    padding: 4px 8px;
+    /*border-radius: 8px;*/
+    font-weight: bold;
+}
+
 /* PAGINA PROVVIGIONI */
 /* contenitore flessibile per titolo + ricerca + totale */
 .provvigioni-header {

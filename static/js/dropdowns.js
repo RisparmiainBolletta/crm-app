@@ -3,6 +3,7 @@
 const statiExtraAdmin = [
     "In lavorazione",
     "Revisione documenti",
+    "Comparato",
     "Attesa attivazione",
     "Esito KO"
 ];

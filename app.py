@@ -351,8 +351,6 @@ def elimina_cliente(id_cliente):
     return jsonify({"message": "Cliente non trovato"}), 404
 
 
-
-
 # -------------------------------------------------------------------
 #  C) GESTIONE INTERAZIONI
 # -------------------------------------------------------------------
@@ -361,11 +359,32 @@ def get_interazioni(id_cliente):
     if 'agente' not in session:
         return jsonify({"message": "Non autenticato"}), 401
 
+    codice_agente = session.get('agente', '').strip().upper()
+    ruolo = session.get('ruolo', 'agente').strip().lower()
+
     records = interazioni_sheet.get_all_records()
-    # Filtra per ID_Cliente e Agente
-    interazioni_cliente = [r for r in records
-                           if str(r.get("ID_Cliente")) == id_cliente
-                           and r.get("Agente") == session['agente']]
+    agenti = agenti_sheet.get_all_records()
+
+    # ✅ Crea una lista di codici agenti con ruolo = admin
+    codici_admin = [
+        a['Codice_Agente'].strip().upper()
+        for a in agenti
+        if a.get('Ruolo', '').strip().lower() == 'admin'
+    ]
+
+    interazioni_cliente = []
+
+    for r in records:
+        id_cli = str(r.get("ID_Cliente", "")).strip()
+        agente_interazione = str(r.get("Agente", "")).strip().upper()
+
+        if id_cli == id_cliente:
+            if ruolo == "admin":
+                interazioni_cliente.append(r)  # Admin vede tutto
+            else:
+                if agente_interazione == codice_agente or agente_interazione in codici_admin:
+                    interazioni_cliente.append(r)
+
     return jsonify(interazioni_cliente)
 
 @app.route("/interazioni", methods=["POST"])

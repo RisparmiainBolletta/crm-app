@@ -174,6 +174,16 @@ def dati_agente():
 
     return jsonify({"message": "Utente non trovato"}), 404
 
+# ----------------------
+# ---  RUOLI AGENTI ----
+# ----------------------
+@app.route("/ruoli-agenti", methods=["GET"])
+def get_ruoli_agenti():
+    agenti = agenti_sheet.get_all_records()
+    mappa = {a["Codice_Agente"]: a.get("Ruolo", "agente").lower() for a in agenti}
+    return jsonify(mappa)
+
+
 # -------------------------------------------------------------------
 #  B) GESTIONE CLIENTI
 # -------------------------------------------------------------------
@@ -351,6 +361,8 @@ def elimina_cliente(id_cliente):
     return jsonify({"message": "Cliente non trovato"}), 404
 
 
+
+
 # -------------------------------------------------------------------
 #  C) GESTIONE INTERAZIONI
 # -------------------------------------------------------------------
@@ -387,6 +399,9 @@ def get_interazioni(id_cliente):
 
     return jsonify(interazioni_cliente)
 
+
+
+
 @app.route("/interazioni", methods=["POST"])
 def aggiungi_interazione():
     if 'agente' not in session:
@@ -401,7 +416,6 @@ def aggiungi_interazione():
     if not id_cliente or not tipo or not esito:
         return jsonify({"message": "Campi obbligatori mancanti"}), 400
 
-    # Calcola nuovo ID_Interazione
     tutte = interazioni_sheet.get_all_records()
     nuovo_id = f"I{len(tutte)+1:04d}"
 
@@ -411,10 +425,16 @@ def aggiungi_interazione():
 
     agente = session['agente']
 
+    # Se Admin inserisce interazioni, salviamo come 'ADMIN'
+    if isinstance(agente, dict) and agente.get("ruolo", "").strip().lower() == "admin":
+        agente_nome = "ADMIN"
+    else:
+        agente_nome = agente
+
     nuova_riga = [
         nuovo_id,
         id_cliente,
-        agente,
+        agente_nome,
         data_interazione,
         tipo,
         esito,
@@ -1062,6 +1082,8 @@ def rendimento_agenti():
 
     # ➤ Output per frontend: rendimento[agente][competenza] = totale
     return jsonify(rendimento)
+
+
 
 # route di accesso protetta
 

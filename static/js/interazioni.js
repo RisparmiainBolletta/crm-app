@@ -1,4 +1,6 @@
-// interazioni.js - Gestione delle interazioni cliente
+// interazioni.js definitivo - gestione corretta Admin/Agenti
+
+let ruoliAgenti = {}; // ⬅️ Salviamo i ruoli agenti (caricati da backend)
 
 export function collegaPulsantiInterazioni() {
     document.querySelectorAll(".btn-interazioni").forEach(btn => {
@@ -7,7 +9,6 @@ export function collegaPulsantiInterazioni() {
             const idCliente = riga.dataset.id;
             const nomeCliente = btn.dataset.nome || "";
 
-            // Mostra titolo con nome cliente
             document.querySelector("#interazioni-titolo").textContent = `Interazioni - ${nomeCliente}`;
             document.querySelector("#modale-interazioni").style.display = "block";
             document.querySelector("#modale-interazioni").dataset.idCliente = idCliente;
@@ -18,7 +19,6 @@ export function collegaPulsantiInterazioni() {
     });
 }
 
-// 🟦 Carica i valori dinamici dai dropdown
 function caricaDropdownInterazioni() {
     fetch("/tipi-interazione")
         .then(res => res.json())
@@ -47,30 +47,56 @@ function caricaDropdownInterazioni() {
         });
 }
 
-// 📋 Carica interazioni esistenti
-function caricaInterazioni(idCliente) {
-    fetch(`/interazioni/${idCliente}`)
+function caricaRuoliAgenti() {
+    return fetch("/ruoli-agenti")
         .then(res => res.json())
-        .then(interazioni => {
-            const tbody = document.querySelector("#tbody-interazioni");
-            tbody.innerHTML = "";
+        .then(data => {
+            ruoliAgenti = data;
+        })
+        .catch(err => console.error("❌ Errore caricamento ruoli agenti:", err));
+}
 
-            if (!interazioni.length) {
-                tbody.innerHTML = "<tr><td colspan='4'>Nessuna interazione trovata.</td></tr>";
-                return;
-            }
+function caricaInterazioni(idCliente) {
+    caricaRuoliAgenti().then(() => {
+        fetch(`/interazioni/${idCliente}`)
+            .then(res => res.json())
+            .then(interazioni => {
+                const tbody = document.querySelector("#tbody-interazioni");
+                tbody.innerHTML = "";
 
-            interazioni.forEach(interazione => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${interazione.Data}</td>
-                    <td>${interazione.Tipo}</td>
-                    <td>${interazione.Esito}</td>
-                    <td>${interazione.Descrizione}</td>
-                `;
-                tbody.appendChild(tr);
+                if (!interazioni.length) {
+                    tbody.innerHTML = "<tr><td colspan='5' style='color: gray; text-align: center;'>Nessuna interazione trovata.</td></tr>";
+                    return;
+                }
+
+                interazioni.forEach(interazione => {
+                    const tr = document.createElement("tr");
+                    const agente = interazione.Agente || "Sconosciuto";
+                    const ruolo = ruoliAgenti[agente] || "agente";
+
+                    let inseritoDa = "";
+                    if (ruolo === "admin") {
+                        inseritoDa = `<span style=\"color: #ff5722; font-weight: bold;\">🛡️ Admin (${agente})</span>`;
+                    } else {
+                        inseritoDa = `<span style=\"color: #2196f3;\">👤 Agente ${agente}</span>`;
+                    }
+
+                    tr.innerHTML = `
+                        <td>${interazione.Data}</td>
+                        <td>${interazione.Tipo}</td>
+                        <td>${interazione.Esito}</td>
+                        <td>${interazione.Descrizione}</td>
+                        <td>${inseritoDa}</td>
+                    `;
+
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(err => {
+                console.error("❌ Errore caricamento interazioni:", err);
+                alert("Errore nel caricamento delle interazioni.");
             });
-        });
+    });
 }
 
 // ➕ Gestione inserimento nuova interazione
@@ -84,7 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const idCliente = document.querySelector("#modale-interazioni").dataset.idCliente;
         const dataISO = document.getElementById("int-data").value;
 
-        // Converte in formato italiano (gg/mm/aaaa)
         const [yyyy, mm, dd] = dataISO.split("-");
         const data = `${dd}/${mm}/${yyyy}`;
 
@@ -126,6 +151,5 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.error("❌ Errore:", err);
                 alert("Errore: " + err.message);
             });
-
     });
 });

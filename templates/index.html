@@ -1,0 +1,61 @@
+﻿<!-- index.html -->
+{% extends 'base.html' %}
+
+{% block title %}CRM Agenti{% endblock %}  <!--Personalizza il titolo che compare nel browser (sarà visibile come “Dashboard Agenti” al posto di “CRM Agenti”).-->
+{% block content %}
+<!-- Contenuto principale: tabella clienti, pulsanti, dashboard, ecc -->
+
+<div id="profilo-agente" style="font-weight: bold; font-size: 1.0em; margin-bottom: 0.3rem;">
+    <!-- Qui apparirà il nome dell'agente -->
+</div>
+
+<!--<div id="contenuto-clienti">-->
+    <!-- Qui comparirà la tabella dei clienti -->
+<!--</div>-->
+
+
+<div id="profilo-agente" style="font-weight: bold; margin-bottom: 0.3rem;">
+    <!-- Qui comparirà il profilo -->
+    <div class="intestazione-dx">
+        <h3>Elenco Clienti</h3>
+        <button id="btn-apri-modale">➕ Nuovo Cliente</button>
+        <input type="text" id="filtro-clienti" placeholder="🔍 Cerca cliente..." style="padding: 6px; width: 250px;">
+    </div>
+</div>
+
+
+
+<!-- Qui inserirai la tabella con l'elenco dei clienti -->
+<div id="tabella-clienti">
+    <table>
+        <thead>
+            <tr>
+                <th>ID Cliente</th>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Email</th>
+                <th>Telefono</th>
+                <th>Settore</th>
+                <th>Stato</th>
+                <th>Azioni</th>
+            </tr>
+        </thead>
+        <tbody id="tbody-clienti">
+            <!-- righe generate via JS -->
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/clienti.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/dettagli.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/modifica.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/documenti.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/nuovo_cliente.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/dropdowns.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/interazioni.js') }}"></script>
+{% endblock %}
+
+

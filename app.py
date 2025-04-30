@@ -401,7 +401,7 @@ def get_interazioni(id_cliente):
 
 
 
-
+# ✅ 1. AGGIORNA la route POST /interazioni per inserire 'Letto' = FALSE
 @app.route("/interazioni", methods=["POST"])
 def aggiungi_interazione():
     if 'agente' not in session:
@@ -438,13 +438,70 @@ def aggiungi_interazione():
         data_interazione,
         tipo,
         esito,
-        descrizione
+        descrizione,
+        "FALSE"  # 🔔 Letto = FALSE
     ]
 
     interazioni_sheet.append_row(nuova_riga)
 
     return jsonify({"message": "Interazione salvata con successo", "ID": nuovo_id})
 
+
+# ✅ 2. NUOVA route: ritorna tutti gli ID_Cliente con interazioni 'Letto = FALSE'
+# ... ma solo quelle non inserite dall'utente attuale
+@app.route("/notifiche-interazioni-non-letto", methods=["GET"])
+def notifiche_interazioni_non_lette():
+    if 'agente' not in session:
+        return jsonify({"message": "Non autenticato"}), 401
+
+    agente_attuale = session['agente'].strip().upper()
+    ruolo = session.get("ruolo", "agente").strip().lower()
+
+    records = interazioni_sheet.get_all_records()
+    clienti_con_notifiche = set()
+
+    for r in records:
+        letto = str(r.get("Letto", "")).strip().upper()
+        agente_interazione = str(r.get("Agente", "")).strip().upper()
+        id_cliente = str(r.get("ID_Cliente", "")).strip()
+
+        if letto != "FALSE":
+            continue
+
+        # Mostra la notifica solo se l'interazione NON è stata inserita dall'utente stesso
+        if agente_interazione != agente_attuale:
+            clienti_con_notifiche.add(id_cliente)
+
+    return jsonify(list(clienti_con_notifiche))
+
+# ✅ 3. NUOVA route: segna tutte le interazioni di un cliente come lette
+@app.route("/interazioni/segna-letti/<id_cliente>", methods=["POST"])
+def segna_interazioni_lette(id_cliente):
+    if 'agente' not in session:
+        return jsonify({"message": "Non autenticato"}), 401
+
+    agente_attuale = session.get("agente", "").strip().upper()
+    records = interazioni_sheet.get_all_records()
+
+    aggiornate = 0
+
+    for i, r in enumerate(records):
+        id_cli = str(r.get("ID_Cliente", "")).strip()
+        agente_interazione = str(r.get("Agente", "")).strip().upper()
+        letto = str(r.get("Letto", "")).strip().upper()
+
+        if (
+            id_cli == id_cliente
+            and letto == "FALSE"
+            and agente_interazione != agente_attuale
+        ):
+            try:
+                interazioni_sheet.update_cell(i + 2, 8, "TRUE")  # Colonna 8 = Letto
+                aggiornate += 1
+            except Exception as e:
+                print(f"❌ Errore aggiornamento riga {i+2}: {e}")
+
+    return jsonify({"message": f"Interazioni segnate come lette: {aggiornate}"})
 
 # -------------------------------------------------------------------
 #  D) GESTIONE DOCUMENTI

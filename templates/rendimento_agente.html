@@ -1,0 +1,32 @@
+﻿<!-- rendimento_agente.html -->
+{% extends "base.html" %}
+
+{% block title %}Rendimento Personale{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 style="margin-top: 20px;">📈 Il mio rendimento</h2>
+    <p>Visualizza le provvigioni maturate mese per mese.</p>
+
+    <div class="filtro-rendimento" style="margin-bottom: 20px;">
+        <label for="mese">Mese:</label>
+        <select id="filtro-mese">
+            <option value="">-- Tutti i mesi --</option>
+        </select>
+
+        <label for="anno">Anno:</label>
+        <select id="filtro-anno"></select>
+
+        <button id="btn-filtra" class="btn-primario">Filtra</button>
+    </div>
+
+    <div style="position: relative; width: 70%; aspect-ratio: 2 / 1;">
+        <canvas id="grafico-rendimento-agente"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="module" src="{{ url_for('static', filename='js/rendimento_agente.js') }}"></script>
+{% endblock %}

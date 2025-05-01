@@ -503,6 +503,8 @@ def segna_interazioni_lette(id_cliente):
 
     return jsonify({"message": f"Interazioni segnate come lette: {aggiornate}"})
 
+
+
 # -------------------------------------------------------------------
 #  D) GESTIONE DOCUMENTI
 # -------------------------------------------------------------------
@@ -1142,14 +1144,71 @@ def rendimento_agenti():
 
 
 
-# route di accesso protetta
+# 📊 Nuova route: rendimento per agente (solo dati propri)
+@app.route("/api/rendimento-agente")
+def rendimento_agente():
+    if "agente" not in session:
+        return jsonify({"message": "Non autenticato"}), 401
 
-@app.route("/rendimento-agenti")
-def pagina_rendimento_agenti():
-    if 'agente' not in session or session.get('ruolo', '').lower() != 'admin':
+    agente_corrente = session['agente'].strip().upper()
+    mese = request.args.get("mese")  # opzionale
+    anno = request.args.get("anno")
+
+    if not anno:
+        return jsonify({"message": "Anno obbligatorio"}), 400
+
+    clienti = clienti_sheet.get_all_records(value_render_option='UNFORMATTED_VALUE')
+    rendimento = {}
+
+    from datetime import datetime, date, timedelta
+
+    for cliente in clienti:
+        if str(cliente.get("Agente", "")).strip().upper() != agente_corrente:
+            continue
+
+        provvigione = cliente.get("Provvigione")
+        comp_raw = cliente.get("Competenza", "")
+
+        if isinstance(comp_raw, (datetime, date)):
+            competenza = comp_raw.strftime("%m/%Y")
+        elif isinstance(comp_raw, int):
+            base_date = date(1899, 12, 30)
+            data_comp = base_date + timedelta(days=comp_raw)
+            competenza = data_comp.strftime("%m/%Y")
+        else:
+            competenza = str(comp_raw).strip()
+
+        if not provvigione or not competenza or "/" not in competenza:
+            continue
+
+        mese_comp, anno_comp = competenza.split("/")
+        if anno_comp != anno:
+            continue
+
+        if mese and mese_comp != mese:
+            continue
+
+        try:
+            valore = float(str(provvigione).replace(",", "."))
+        except:
+            continue
+
+        rendimento[competenza] = rendimento.get(competenza, 0) + valore
+
+    # Ordina per competenza cronologica
+    dati = [
+        {"competenza": k, "totale": round(v, 2)}
+        for k, v in sorted(rendimento.items(), key=lambda x: datetime.strptime(x[0], "%m/%Y"))
+    ]
+
+    return jsonify(dati)
+
+
+@app.route("/rendimento-agente")
+def pagina_rendimento_agente():
+    if "agente" not in session:
         return redirect("/login")
-    return render_template("rendimento.html")
-
+    return render_template("rendimento_agente.html")
 
 
 

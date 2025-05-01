@@ -1212,6 +1212,17 @@ def pagina_rendimento_agente():
 
 
 
+# route di accesso protetta
+
+@app.route("/rendimento-agenti")
+def pagina_rendimento_agenti():
+    if 'agente' not in session or session.get('ruolo', '').lower() != 'admin':
+        return redirect("/login")
+    return render_template("rendimento.html")
+
+
+
+
 ###if __name__ == '__main__':
 ###    app.run(debug=True)
 

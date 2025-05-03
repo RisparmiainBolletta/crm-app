@@ -1,0 +1,685 @@
+/* ------------------------------
+   📋 STYLE.CSS – Stile Generale
+--------------------------------*/
+
+/* 🌐 Corpo della pagina */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f7f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+/* 🔝 Navbar */
+nav {
+    color: white;
+    padding: 7px 10px;
+    background: linear-gradient(to right, #2c3e50, #3498db);
+}
+
+    nav ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+    }
+
+        nav ul li {
+            margin-right: 10px;
+        }
+
+            nav ul li:last-child {
+                margin-left: auto;
+            }
+
+            nav ul li a {
+                color: white;
+                text-decoration: none;
+                font-weight: bold;
+            }
+
+                nav ul li a:hover {
+                    color: #00d1b2;
+                }
+
+h1 {
+    margin: 0;
+    font-size: 1.6em;
+}
+
+h2 {
+    margin: 0;
+    font-size: 1.3em;
+}
+
+h3 {
+    margin: 0;
+    font-size: 1.0em;
+}
+
+main, .container {
+    padding-bottom: 10px; /* ✅ Ridotto per evitare spazio eccessivo */
+}
+
+/* 🖚 Footer */
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #34495e;
+    color: white;
+    padding: 2px 3px;
+    text-align: center;
+    font-size: 0.75em; /* ✅ Ridotto */
+    z-index: 1000;
+    background: linear-gradient(to right, #2c3e50, #3498db);
+    margin-top: 0 !important; /* ✅ Elimina margine verticale */
+}
+
+/* 📛 Profilo agente (intestazione utente) */
+#profilo-agente {
+    margin-bottom: 10px;
+    font-weight: bold;
+    font-size: 18px;
+    padding: 4px 4px;
+    background-color: #eaeff2;
+    border-bottom: 1px solid #ccc;
+}
+
+/* Allinea a destra */
+.intestazione-dx {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 2px; /* ↓ Riduce lo spazio sopra */
+    margin-bottom: 2px; /* ↓ Riduce lo spazio sotto */
+}
+
+/* ------------------------------
+   📊 Tabelle
+--------------------------------*/
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0rem;
+    font-size: 12px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+}
+
+thead {
+    background: linear-gradient(to right, #2c3e50, #3498db);
+    color: white;
+    text-align: left;
+}
+
+    thead th {
+        padding: 6px 8px;
+        font-weight: 500;
+        border-bottom: 2px solid #2980b9;
+    }
+
+tbody tr {
+    background-color: #f0f8ff;
+    transition: background-color 0.3s;
+}
+
+    tbody tr:nth-child(even) {
+        background-color: #e6f0fa;
+    }
+
+tbody td {
+    padding: 5px 8px;
+    border-bottom: 1px solid #ddd;
+    color: #2c3e50;
+}
+
+tbody tr:hover {
+    background-color: #dceeff;
+}
+
+td:last-child {
+    white-space: nowrap;
+}
+
+/* Contenitore della tabella con scroll */
+#tabella-clienti {
+    max-height: calc(100vh - 175px); /* Adatta alla finestra */
+    overflow-y: auto;
+    overflow-x: visible;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background-color: white;
+    margin-bottom: 0
+}
+
+    /* Tabella */
+    #tabella-clienti table thead {
+        top: 0;
+        position: sticky;
+        width: 100%;
+        border-collapse: collapse;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        background: linear-gradient(to right, #2c3e50, #3498db); /* Sfumatura continua */
+        z-index: 1000;
+    }
+
+    /* Intestazione fissa con sfumatura continua */
+    #tabella-clienti thead th {
+        /*background: linear-gradient(to right, #2c3e50, #3498db);*/ /* Sfumatura continua */
+        color: white;
+        /*z-index: 1000;*/
+        padding: 6px 8px;
+        border-bottom: 2px solid #2980b9;
+        text-align: left;
+    }
+
+    /* Corpo righe */
+    #tabella-clienti tbody tr {
+        background-color: #f0f8ff;
+        transition: background-color 0.3s;
+    }
+
+        #tabella-clienti tbody tr:nth-child(even) {
+            background-color: #e6f0fa;
+        }
+
+        #tabella-clienti tbody tr:hover {
+            background-color: #dceeff;
+        }
+
+    #tabella-clienti tbody td {
+        padding: 3px 8px;
+        border-bottom: 1px solid #ddd;
+        color: #2c3e50;
+    }
+
+
+
+
+/* ------------------------------
+   🔲 Modali
+--------------------------------*/
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(44, 62, 80, 0.7);
+}
+
+.modal-content {
+    background: linear-gradient(to bottom, #ecf6ff, #d6eaff);
+    padding: 20px 20px;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #2c3e50;
+    font-family: Arial, sans-serif;
+}
+
+    .modal-content h2,
+    .modal-content h3 {
+        margin-top: 0;
+        font-size: 20px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        color: #2c3e50;
+    }
+
+    .modal-content label {
+        display: block;
+        margin: 10px 0 5px;
+        font-weight: bold;
+        color: #34495e;
+    }
+
+    .modal-content input[type="text"],
+    .modal-content input[type="email"],
+    .modal-content input[type="number"],
+    .modal-content input[type="file"],
+    .modal-content select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background-color: #f9fbff;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+        .modal-content input:focus,
+        .modal-content select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+        }
+
+    .modal-content button {
+        background: linear-gradient(to right, #3498db, #5dade2);
+        color: white;
+        padding: 5px 8px;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        margin-top: 10px;
+    }
+
+        .modal-content button:hover {
+            background: linear-gradient(to right, #2980b9, #3498db);
+        }
+
+/* ❌ Bottone di chiusura */
+.close-button {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    cursor: pointer;
+    font-size: 24px;
+    color: #2c3e50;
+}
+
+    .close-button:hover {
+        color: #e74c3c;
+    }
+
+
+/* ------------------------------
+   🧩 Form in Modale a Griglia
+--------------------------------*/
+
+.form-griglia {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    row-gap: 4px; /* spazio verticale ridotto */
+    column-gap: 10px; /* spazio orizzontale tra colonne */
+    margin-top: 5px;
+}
+
+    .form-griglia .campo {
+        display: flex;
+        flex-direction: column;
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+
+    .form-griglia .campo-doppio {
+        grid-column: span 2;
+        text-align: center;
+        margin-top: 2px;
+        margin-bottom: 0.1rem;
+    }
+
+    .form-griglia .campo label {
+        font-weight: bold;
+        margin-bottom: 3px;      /*🔽 spazio tra label e input*/ 
+    }
+
+    .form-griglia .campo input,
+    .form-griglia .campo select {
+        padding: 3px 5px;
+        font-size: 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-bottom: 0.1rem;
+    }
+
+#int-descrizione {
+    font-family: Arial, sans-serif;
+}
+
+
+/* ------------------------------
+   🔘 Pulsanti generici
+--------------------------------*/
+
+button {
+    padding: 8px 16px;
+    background-color: #99CCFF;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+    button:hover {
+        background-color: #3399FF;
+    }
+
+/* ✅ Bottone Approva (Admin) */
+.btn-approva-file {
+    background-color: #2ecc71; /* Verde */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 6px 10px;
+    margin-left: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+}
+
+    .btn-approva-file:hover {
+        background-color: #27ae60;
+    }
+
+
+/* ------------------------------
+   ⋮ Menu Azioni
+--------------------------------*/
+
+.menu-azioni-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+/* Bottone menu azioni */
+.btn-menu-azioni {
+    height: 25px; /* Altezza simile a quella risultante da .btn-documenti */
+    background-color: #99CCFF;
+    color: white;
+    font-weight: bold;
+    border: none;
+    padding: 6px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-right: 6px;
+}
+
+/* Interno del Menu azioni ⋮ */
+.menu-azioni {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    right: 0;
+    background: #EAEAEA;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 4px 4px;
+    box-shadow: 0px 2px 8px rgba(0,0,0,0.2);
+    z-index: 100;
+}
+    /* Pulsanti interni al menu azioni */
+    .menu-azioni button {
+        display: block;
+        background: none;
+        border: none;
+        padding: 4px;
+        width: 100%;
+        text-align: center;
+        cursor: pointer;
+    }
+
+.menu-azioni-wrapper.open .menu-azioni {
+    /*display: block;*/
+    display: flex;
+}
+
+    .menu-azioni button:hover {
+        background-color: #99CCFF;
+    }
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+ /* 🎯 STILI SPECIFICI PER I PULSANTI AZIONE CLIENTE */
+
+ /* Pulsante 📎 Documenti */
+.btn-documenti {
+    background-color: #99CCFF;
+    color: white;
+    font-weight: bold;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+    .btn-documenti:hover {
+        background-color: #2980b9;
+    }
+
+/* Pulsante (Admin) */
+.btn-documenti-admin {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95em;
+    margin-left: 2px;
+    margin-right: 2px;
+    transition: background-color 0.3s;
+}
+
+    .btn-documenti-admin:hover {
+        background-color: #2980b9;
+    }
+
+/* Pulsante 📋 Interazioni */
+.btn-interazioni {
+    color: #2c3e50;
+    background-color: #ecf6ff;
+}
+
+    btn-interazioni:hover {
+        background-color: #d0e8ff;
+    }
+    
+
+ /* Pulsante 🔍 Dettagli */
+.btn-dettagli {
+    color: #2c3e50;
+    background-color: #ecf6ff;
+}
+
+    .btn-dettagli:hover {
+        background-color: #d0e8ff;
+    }
+
+ /* Pulsante ✏️ Modifica */
+.btn-modifica {
+    color: #2c3e50;
+    background-color: #fdf1d6;
+}
+
+    .btn-modifica:hover {
+        background-color: #d0e8ff;
+    }
+
+ /*Pulsante 🗑 Elimina */
+.btn-elimina {
+    color: #2c3e50;
+    background-color: #e74c3c;
+}
+
+    .btn-elimina:hover {
+        background-color: #d0e8ff;
+    }
+
+/*Pulsante Duplica */
+.btn-duplica {
+    color: #2c3e50;
+    background-color: #e74c3c;
+}
+
+    .btn-duplica:hover {
+        background-color: #d0e8ff;
+    }
+
+/* GRAFICO ADMIN */
+canvas.grafico-rendimento {
+    width: 70% !important;
+    height: auto !important;
+}
+
+/*STATO*/
+.stato-verde {
+    background-color: #27ae60;
+    color: white;
+    padding: 4px 8px;
+    /*border-radius: 8px;*/
+    font-weight: bold;
+}
+
+.stato-arancione {
+    background-color: #e67e22;
+    color: white;
+    padding: 4px 8px;
+    /*border-radius: 8px;*/
+    font-weight: bold;
+}
+
+.stato-rosso {
+    background-color: #c0392b;
+    color: white;
+    padding: 4px 8px;
+    /*border-radius: 8px;*/
+    font-weight: bold;
+}
+
+.stato-giallo {
+    background-color: #FFED09;
+    color: black;
+    padding: 4px 8px;
+    /*border-radius: 8px;*/
+    font-weight: bold;
+}
+.stato-blu {
+    background-color: #3498db;
+    color: white;
+    padding: 4px 8px;
+    /*border-radius: 8px;*/
+    font-weight: bold;
+}
+
+/* PAGINA PROVVIGIONI */
+/* contenitore flessibile per titolo + ricerca + totale */
+.provvigioni-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.2rem;
+}
+
+/* Titolo senza margini extra */
+.provvigioni-title {
+    margin: 0;
+    flex-shrink: 0;
+    font-size: 1.3rem;
+}
+
+/* Input di ricerca espandibile */
+.provvigioni-search {
+    flex: 1 1 300px;
+    max-width: 400px;
+    padding: 6px 10px;
+    font-size: 1rem;
+}
+
+/* Totale allineato a destra */
+.provvigioni-totale {
+    white-space: nowrap;
+    font-weight: bold;
+    flex-shrink: 0;
+    padding: 6px 6px;
+}
+
+/* Piccola descrizione sotto */
+.provvigioni-desc {
+    margin: 0 0 0.5rem 0;
+    color: #555;
+    font-style: italic;
+    font-size: 10px;
+    padding: 6px 6px;
+}
+
+.badge-notifica {
+    margin-left: 6px;
+}
+
+/* LOGIN */
+
+.login-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: #f5f7fa;
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.login-wrapper {
+    background: #fff;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    text-align: center;
+    width: 100%;
+    max-width: 250px;
+}
+
+.login-form input {
+    width: 100%;
+    max-width: 200px;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    margin: 5px auto;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.login-form button {
+    width: 90%;
+    padding: 12px;
+    margin: 10px auto 0 auto; /* 👈 centrato orizzontalmente */
+    align-items: center;
+    justify-content: center;
+    background-color: #0099FF; /* verde acqua */
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+    .login-form button:hover {
+        background-color: #66CCFF;
+    }

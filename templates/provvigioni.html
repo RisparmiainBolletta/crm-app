@@ -1,0 +1,55 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Provvigioni{% endblock %}
+
+{% block content %}
+<div id="profilo-agente" style="font-weight: bold; font-size: 0.8em; margin-bottom: 0.3rem;">
+    <!-- Qui apparirà il nome dell'agente -->
+</div>
+
+<div class="provvigioni-header">
+    <h2 class="provvigioni-title">💰 Provvigioni</h2>
+    <!-- Descrizione subito sotto -->
+    <p style="font-size: 0.75em;">
+        Elenco delle provvigioni maturate dai tuoi clienti.
+    </p>
+    <input type="text" id="filtro-competenza" placeholder="📅 Filtro Competenza (es. 04/2025)" style="margin-left: 1rem; padding: 6px; width: 220px;">
+    <input type="text"
+           id="filtro-provvigioni"
+           class="provvigioni-search"
+           placeholder="🔍 Cerca...">
+    <div class="provvigioni-totale">
+        Totale Provvigioni: <span id="totale-provvigioni">€ 0,00</span>
+    </div>
+</div>
+
+
+
+<!-- Tabella con ID per DataTables -->
+<div id="contenitore-tabella">
+    <table id="tabella-provvigioni" class="display" style="width: 100%; margin-top: 0.2rem;">
+        <thead>
+            <tr id="thead-provvigioni">
+                <th data-chiave="Competenza">Competenza</th>
+                <th data-chiave="ID_Cliente">ID Cliente</th>
+                <th data-chiave="Nome">Nome</th>
+                <th data-chiave="Categoria">Categoria</th>
+                <th data-chiave="Stato">Stato</th>
+                <th data-chiave="Settore">Settore</th>
+                <th data-chiave="Nuovo_Fornitore">Nuovo Fornitore</th>
+                <th data-chiave="Provvigione">Provvigione</th>
+            </tr>
+        </thead>
+        <tbody id="tbody-provvigioni">
+            <!-- Dati caricati via JS -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Includi DataTables (JS + CSS) -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="{{ url_for('static', filename='js/provvigioni.js') }}"></script>
+{% endblock %}
+

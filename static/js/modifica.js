@@ -8,6 +8,7 @@ export function collegaPulsantiModifica() {
                 alert("❌ Non puoi modificare questo cliente: contratto già attivato.");
                 return;
             }
+
             const riga = btn.closest("tr");
             const idCliente = riga.dataset.id;
 
@@ -24,17 +25,23 @@ export function collegaPulsantiModifica() {
             document.getElementById("mod-cf").value = btn.dataset.cf || "";
             document.getElementById("mod-piva").value = btn.dataset.piva || "";
             document.getElementById("mod-stato").value = btn.dataset.stato || "";
-            /*document.getElementById("mod-provvigione").value = btn.dataset.provvigione || "";*/
 
             document.getElementById("modale-modifica-cliente").style.display = "block";
         });
     });
 }
 
-// Salvataggio modifiche cliente (questa parte rimane all’avvio normale)
+// Salvataggio modifiche cliente
+
+let statoPrecedente = "";
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("form-modifica");
     if (!form) return;
+
+    const statoInput = document.getElementById("mod-stato");
+    statoInput.addEventListener("focus", () => {
+        statoPrecedente = statoInput.value;
+    });
 
     form.addEventListener("submit", function (event) {
         event.preventDefault();
@@ -54,10 +61,12 @@ document.addEventListener("DOMContentLoaded", () => {
             Codice_Fiscale: document.getElementById("mod-cf").value,
             Partita_IVA: document.getElementById("mod-piva").value,
             Stato: document.getElementById("mod-stato").value,
-            // Provvigione: document.getElementById("mod-provvigione").value,
         };
 
         const urlBase = window.location.pathname.includes("admin") ? "/admin/clienti" : "/clienti";
+
+        console.log("📤 Invio aggiornamento cliente:", id, datiAggiornati);
+
         fetch(`${urlBase}/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -65,9 +74,21 @@ document.addEventListener("DOMContentLoaded", () => {
         })
             .then(res => {
                 if (!res.ok) throw new Error("Errore durante la modifica");
+
+                console.log("🟢 Cliente aggiornato, sincronizzo comparazione...");
+                return fetch(`/sincronizza-da-comparare/${id}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ Stato: datiAggiornati.Stato })
+                });
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log("✔️ Sincronizzazione:", data.message);
                 alert("Modifica salvata!");
                 location.reload();
             })
-            .catch(err => alert(err.message));
+            .catch(err => alert("❌ " + err.message));
     });
+
 });

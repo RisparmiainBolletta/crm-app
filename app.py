@@ -251,17 +251,20 @@ def add_cliente():
 
 @app.route("/clienti/<id_cliente>", methods=["PUT"])
 def aggiorna_cliente(id_cliente):
-    # Modifica di un cliente esistente
     if 'agente' not in session:
         return jsonify({"message": "Non autenticato"}), 401
 
     data = request.json
+    agente = session['agente']
     tutti = clienti_sheet.get_all_records()
-    for idx, cliente in enumerate(tutti):
-        if cliente["ID_Cliente"] == id_cliente and cliente["Agente"] == session['agente']:
-            riga_excel = idx + 2  # +2 = salto intestazione e base1
 
-            # 🔁 Aggiorna tutti i campi
+    for idx, cliente in enumerate(tutti):
+        if cliente["ID_Cliente"] == id_cliente and cliente["Agente"] == agente:
+            riga_excel = idx + 2
+            stato_precedente = cliente.get("Stato", "").strip().lower()
+            stato_nuovo = data.get("Stato", "").strip().lower()
+
+            # 🔁 Aggiorna campi
             clienti_sheet.update(f"B{riga_excel}", [[data["Nome"]]])
             clienti_sheet.update(f"C{riga_excel}", [[data["Categoria"]]])
             clienti_sheet.update(f"D{riga_excel}", [[data["Email"]]])
@@ -274,6 +277,15 @@ def aggiorna_cliente(id_cliente):
             clienti_sheet.update(f"L{riga_excel}", [[data["Nuovo_Fornitore"]]])
             clienti_sheet.update(f"M{riga_excel}", [[data["Codice_Fiscale"]]])
             clienti_sheet.update(f"N{riga_excel}", [[data["Partita_IVA"]]])
+
+            # 🔁 Verifica stato "Da comparare"
+            if stato_precedente != stato_nuovo and ("da comparare" in [stato_precedente, stato_nuovo]):
+                from requests import post
+                try:
+                    post("http://127.0.0.1:5000/verifica-clienti-comparare", json={"agente": agente})
+                    print(f"🔁 Verifica sincronizzazione file comparazioni per agente {agente}")
+                except Exception as e:
+                    print("⚠️ Errore nella verifica-clienti-comparare:", e)
 
             return jsonify({"message": "Cliente aggiornato correttamente"}), 200
 
@@ -318,12 +330,16 @@ def admin_modifica_cliente(id_cliente):
 
 @app.route("/clienti/<id_cliente>", methods=["DELETE"])
 def elimina_cliente(id_cliente):
-    if 'agente' not in session:
+    if 'agente' not in session and session.get("ruolo", "").strip().lower() != "admin":
         return jsonify({"message": "Non autenticato"}), 401
 
     tutti = clienti_sheet.get_all_records()
     for idx, cliente in enumerate(tutti):
-        if cliente["ID_Cliente"] == id_cliente and cliente["Agente"] == session['agente']:
+        if cliente["ID_Cliente"] == id_cliente:
+            # Se è un agente, verifica che sia il suo cliente
+            if session.get("ruolo", "").strip().lower() != "admin" and cliente["Agente"] != session['agente']:
+                continue  # Salta, non può eliminarlo
+
             riga_excel = idx + 2
             clienti_sheet.delete_rows(riga_excel)
 
@@ -352,15 +368,12 @@ def elimina_cliente(id_cliente):
                     filelog_sheet.delete_rows(i)
 
                 print(f"🗑️ Righe eliminate dal log File_Allegati per cliente {id_cliente}: {len(righe_da_eliminare)}")
-
             except Exception as e:
                 print("⚠️ Errore durante eliminazione righe File_Allegati:", e)
 
             return jsonify({"message": "Cliente e documenti eliminati correttamente"}), 200
 
     return jsonify({"message": "Cliente non trovato"}), 404
-
-
 
 
 # -------------------------------------------------------------------
@@ -915,6 +928,221 @@ def get_settori():
         return jsonify(settori)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# Viene chiamata quando uno specifico cliente cambia stato in "Da comparare"
+@app.route("/sincronizza-da-comparare/<id_cliente>", methods=["POST"])
+def sincronizza_cliente_da_comparare(id_cliente):
+    from openpyxl import Workbook, load_workbook
+    from io import BytesIO
+    from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
+
+    if 'agente' not in session:
+        return jsonify({"message": "Non autenticato"}), 401
+
+    stato_corrente = request.json.get("Stato", "").strip().lower()
+    codice_agente = session["agente"]
+
+    clienti = clienti_sheet.get_all_records()
+    cliente = next((c for c in clienti if c.get("ID_Cliente") == id_cliente and c.get("Agente") == codice_agente), None)
+    if not cliente:
+        return jsonify({"message": "Cliente non trovato"}), 404
+
+    nome_file = f"clienti_da_comparare_{codice_agente}.xlsx"
+    nome_cartella = "Da_Comparare"
+
+    # Recupera o crea cartella
+    query = (
+        f"name = '{nome_cartella}' and mimeType = 'application/vnd.google-apps.folder' "
+        f"and '{main_folder_id}' in parents and trashed = false"
+    )
+    results = drive_service.files().list(q=query, spaces='drive', fields="files(id)").execute()
+    folders = results.get("files", [])
+
+    if folders:
+        sotto_cartella_id = folders[0]["id"]
+    else:
+        file_metadata = {
+            "name": nome_cartella,
+            "mimeType": "application/vnd.google-apps.folder",
+            "parents": [main_folder_id]
+        }
+        folder = drive_service.files().create(body=file_metadata, fields="id").execute()
+        sotto_cartella_id = folder["id"]
+
+    # Cerca file
+    query = (
+        f"name = '{nome_file}' and mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' "
+        f"and '{sotto_cartella_id}' in parents and trashed = false"
+    )
+    results = drive_service.files().list(q=query, spaces='drive', fields="files(id)").execute()
+    files = results.get("files", [])
+
+    file_id = None
+    intestazioni = list(cliente.keys())
+
+    if files:
+        file_id = files[0]["id"]
+        request_drive = drive_service.files().get_media(fileId=file_id)
+        fh = BytesIO()
+        downloader = MediaIoBaseDownload(fh, request_drive)
+        done = False
+        while not done:
+            status, done = downloader.next_chunk()
+        fh.seek(0)
+
+        wb = load_workbook(fh)
+        ws = wb.active
+        header_row = [cell.value for cell in ws[1]]
+        if not header_row or "ID_Cliente" not in header_row:
+            ws.delete_rows(1, ws.max_row)  # Elimina tutto se corrotto
+            ws.append(intestazioni)
+        else:
+            intestazioni = header_row
+    else:
+        wb = Workbook()
+        ws = wb.active
+        ws.append(intestazioni)
+
+    # Elabora righe
+    id_col = intestazioni.index("ID_Cliente")
+    righe = list(ws.iter_rows(min_row=2, values_only=True))
+    nuovi_dati = []
+    gia_presente = False
+
+    for r in righe:
+        if str(r[id_col]) == id_cliente:
+            gia_presente = True
+            if stato_corrente != "da comparare":
+                continue  # esclude
+        nuovi_dati.append(r)
+
+    if not gia_presente and stato_corrente == "da comparare":
+        nuova_riga = [cliente.get(col, "") for col in intestazioni]
+        nuovi_dati.append(tuple(nuova_riga))
+        print(f"➕ Aggiunto {id_cliente} a {nome_file}")
+    elif gia_presente and stato_corrente != "da comparare":
+        print(f"➖ Rimosso {id_cliente} da {nome_file}")
+
+    ws.delete_rows(2, ws.max_row)
+    for r in nuovi_dati:
+        ws.append(r)
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    media = MediaIoBaseUpload(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', resumable=True)
+
+    if file_id:
+        drive_service.files().update(fileId=file_id, media_body=media).execute()
+    else:
+        file_metadata = {
+            'name': nome_file,
+            'parents': [sotto_cartella_id],
+            'mimeType': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }
+        drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+
+    return jsonify({"message": f"File sincronizzato per {id_cliente}"}), 200
+
+
+@app.route("/verifica-clienti-comparare", methods=["POST"])
+def verifica_clienti_da_comparare():
+    if 'agente' not in session:
+        return jsonify({"message": "Non autenticato"}), 401
+
+    from openpyxl import Workbook, load_workbook
+    from io import BytesIO
+    from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
+
+    agente = session["agente"]
+    nome_file = f"clienti_da_comparare_{agente}.xlsx"
+    nome_cartella = "Da_Comparare"
+
+    # 1. Recupera o crea la cartella "Da_Comparare" dentro CRM_Documenti
+    query = (
+        f"name = '{nome_cartella}' and mimeType = 'application/vnd.google-apps.folder' "
+        f"and '{main_folder_id}' in parents and trashed = false"
+    )
+    results = drive_service.files().list(q=query, spaces='drive', fields="files(id)").execute()
+    folders = results.get("files", [])
+
+    if folders:
+        sotto_cartella_id = folders[0]["id"]
+    else:
+        file_metadata = {
+            "name": nome_cartella,
+            "mimeType": "application/vnd.google-apps.folder",
+            "parents": [main_folder_id]
+        }
+        folder = drive_service.files().create(body=file_metadata, fields="id").execute()
+        sotto_cartella_id = folder["id"]
+
+    # 2. Filtra clienti dell’agente con stato "Da comparare"
+    clienti = clienti_sheet.get_all_records()
+    clienti_da_comparare = [c for c in clienti if c.get("Agente") == agente and c.get("Stato", "").strip().lower() == "da comparare"]
+
+    # 3. Cerca il file dell’agente su Drive
+    query = (
+        f"name = '{nome_file}' and mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' "
+        f"and '{sotto_cartella_id}' in parents and trashed = false"
+    )
+    results = drive_service.files().list(q=query, spaces='drive', fields="files(id, name)").execute()
+    files = results.get('files', [])
+
+    file_id = None
+    wb = Workbook()
+    ws = wb.active
+    intestazioni = list(clienti[0].keys()) if clienti else []
+
+    if files:
+        file_id = files[0]["id"]
+        request_drive = drive_service.files().get_media(fileId=file_id)
+        fh = BytesIO()
+        downloader = MediaIoBaseDownload(fh, request_drive)
+        done = False
+        while not done:
+            status, done = downloader.next_chunk()
+        fh.seek(0)
+        wb = load_workbook(fh)
+        ws = wb.active
+        intestazioni = [cell.value for cell in ws[1]]
+    else:
+        ws.append(intestazioni)
+
+    # 4. Rimuove righe non più "Da comparare"
+    id_col = intestazioni.index("ID_Cliente")
+    righe = list(ws.iter_rows(min_row=2, values_only=True))
+    da_comparare_ids = [c["ID_Cliente"] for c in clienti_da_comparare]
+    righe_valide = [r for r in righe if r[id_col] in da_comparare_ids]
+
+    ws.delete_rows(2, ws.max_row)
+    for riga in righe_valide:
+        ws.append(riga)
+
+    # 5. Aggiunge nuovi clienti
+    gia_presenti = [r[id_col] for r in righe_valide]
+    for cliente in clienti_da_comparare:
+        if cliente["ID_Cliente"] not in gia_presenti:
+            ws.append([cliente.get(col, "") for col in intestazioni])
+
+    # 6. Salva il file aggiornato su Drive
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    media = MediaIoBaseUpload(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', resumable=True)
+
+    if file_id:
+        drive_service.files().update(fileId=file_id, media_body=media).execute()
+    else:
+        file_metadata = {
+            'name': nome_file,
+            'parents': [sotto_cartella_id],
+            'mimeType': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }
+        drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+
+    return jsonify({"message": f"Verifica completata per {nome_file}"}), 200
+
 
 # -------------------------------------------------------------------
 #  F) Quando l’agente apre i documenti → aggiorna

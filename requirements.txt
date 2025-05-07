@@ -3,3 +3,4 @@ flask_cors
 gspread
 oauth2client
 google-api-python-client
+openpyxl

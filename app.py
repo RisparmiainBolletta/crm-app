@@ -939,110 +939,115 @@ def sincronizza_cliente_da_comparare(id_cliente):
     if 'agente' not in session:
         return jsonify({"message": "Non autenticato"}), 401
 
-    stato_corrente = request.json.get("Stato", "").strip().lower()
-    codice_agente = session["agente"]
+    try:
+        stato_corrente = request.json.get("Stato", "").strip().lower()
+        codice_agente = session["agente"]
 
-    clienti = clienti_sheet.get_all_records()
-    cliente = next((c for c in clienti if c.get("ID_Cliente") == id_cliente and c.get("Agente") == codice_agente), None)
-    if not cliente:
-        return jsonify({"message": "Cliente non trovato"}), 404
+        clienti = clienti_sheet.get_all_records()
+        cliente = next((c for c in clienti if c.get("ID_Cliente") == id_cliente and c.get("Agente") == codice_agente), None)
+        if not cliente:
+            return jsonify({"message": "Cliente non trovato"}), 404
 
-    nome_file = f"clienti_da_comparare_{codice_agente}.xlsx"
-    nome_cartella = "Da_Comparare"
+        nome_file = f"clienti_da_comparare_{codice_agente}.xlsx"
+        nome_cartella = "Da_Comparare"
 
-    # Recupera o crea cartella
-    query = (
-        f"name = '{nome_cartella}' and mimeType = 'application/vnd.google-apps.folder' "
-        f"and '{main_folder_id}' in parents and trashed = false"
-    )
-    results = drive_service.files().list(q=query, spaces='drive', fields="files(id)").execute()
-    folders = results.get("files", [])
+        # Recupera o crea cartella
+        query = (
+            f"name = '{nome_cartella}' and mimeType = 'application/vnd.google-apps.folder' "
+            f"and '{main_folder_id}' in parents and trashed = false"
+        )
+        results = drive_service.files().list(q=query, spaces='drive', fields="files(id)").execute()
+        folders = results.get("files", [])
 
-    if folders:
-        sotto_cartella_id = folders[0]["id"]
-    else:
-        file_metadata = {
-            "name": nome_cartella,
-            "mimeType": "application/vnd.google-apps.folder",
-            "parents": [main_folder_id]
-        }
-        folder = drive_service.files().create(body=file_metadata, fields="id").execute()
-        sotto_cartella_id = folder["id"]
-
-    # Cerca file
-    query = (
-        f"name = '{nome_file}' and mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' "
-        f"and '{sotto_cartella_id}' in parents and trashed = false"
-    )
-    results = drive_service.files().list(q=query, spaces='drive', fields="files(id)").execute()
-    files = results.get("files", [])
-
-    file_id = None
-    intestazioni = list(cliente.keys())
-
-    if files:
-        file_id = files[0]["id"]
-        request_drive = drive_service.files().get_media(fileId=file_id)
-        fh = BytesIO()
-        downloader = MediaIoBaseDownload(fh, request_drive)
-        done = False
-        while not done:
-            status, done = downloader.next_chunk()
-        fh.seek(0)
-
-        wb = load_workbook(fh)
-        ws = wb.active
-        header_row = [cell.value for cell in ws[1]]
-        if not header_row or "ID_Cliente" not in header_row:
-            ws.delete_rows(1, ws.max_row)  # Elimina tutto se corrotto
-            ws.append(intestazioni)
+        if folders:
+            sotto_cartella_id = folders[0]["id"]
         else:
-            intestazioni = header_row
-    else:
-        wb = Workbook()
-        ws = wb.active
-        ws.append(intestazioni)
+            file_metadata = {
+                "name": nome_cartella,
+                "mimeType": "application/vnd.google-apps.folder",
+                "parents": [main_folder_id]
+            }
+            folder = drive_service.files().create(body=file_metadata, fields="id").execute()
+            sotto_cartella_id = folder["id"]
 
-    # Elabora righe
-    id_col = intestazioni.index("ID_Cliente")
-    righe = list(ws.iter_rows(min_row=2, values_only=True))
-    nuovi_dati = []
-    gia_presente = False
+        # Cerca file
+        query = (
+            f"name = '{nome_file}' and mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' "
+            f"and '{sotto_cartella_id}' in parents and trashed = false"
+        )
+        results = drive_service.files().list(q=query, spaces='drive', fields="files(id)").execute()
+        files = results.get("files", [])
 
-    for r in righe:
-        if str(r[id_col]) == id_cliente:
-            gia_presente = True
-            if stato_corrente != "da comparare":
-                continue  # esclude
-        nuovi_dati.append(r)
+        file_id = None
+        intestazioni = list(cliente.keys())
 
-    if not gia_presente and stato_corrente == "da comparare":
-        nuova_riga = [cliente.get(col, "") for col in intestazioni]
-        nuovi_dati.append(tuple(nuova_riga))
-        print(f"➕ Aggiunto {id_cliente} a {nome_file}")
-    elif gia_presente and stato_corrente != "da comparare":
-        print(f"➖ Rimosso {id_cliente} da {nome_file}")
+        if files:
+            file_id = files[0]["id"]
+            request_drive = drive_service.files().get_media(fileId=file_id)
+            fh = BytesIO()
+            downloader = MediaIoBaseDownload(fh, request_drive)
+            done = False
+            while not done:
+                status, done = downloader.next_chunk()
+            fh.seek(0)
 
-    ws.delete_rows(2, ws.max_row)
-    for r in nuovi_dati:
-        ws.append(r)
+            wb = load_workbook(fh)
+            ws = wb.active
+            header_row = [cell.value for cell in ws[1]]
+            if not header_row or "ID_Cliente" not in header_row:
+                ws.delete_rows(1, ws.max_row)
+                ws.append(intestazioni)
+            else:
+                intestazioni = header_row
+        else:
+            wb = Workbook()
+            ws = wb.active
+            ws.append(intestazioni)
 
-    output = BytesIO()
-    wb.save(output)
-    output.seek(0)
-    media = MediaIoBaseUpload(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', resumable=True)
+        id_col = intestazioni.index("ID_Cliente")
+        righe = list(ws.iter_rows(min_row=2, values_only=True))
+        nuovi_dati = []
+        gia_presente = False
 
-    if file_id:
-        drive_service.files().update(fileId=file_id, media_body=media).execute()
-    else:
-        file_metadata = {
-            'name': nome_file,
-            'parents': [sotto_cartella_id],
-            'mimeType': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        }
-        drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+        for r in righe:
+            if str(r[id_col]) == id_cliente:
+                gia_presente = True
+                if stato_corrente != "da comparare":
+                    continue
+            nuovi_dati.append(r)
 
-    return jsonify({"message": f"File sincronizzato per {id_cliente}"}), 200
+        if not gia_presente and stato_corrente == "da comparare":
+            nuova_riga = [cliente.get(col, "") for col in intestazioni]
+            nuovi_dati.append(tuple(nuova_riga))
+            print(f"➕ Aggiunto {id_cliente} a {nome_file}")
+        elif gia_presente and stato_corrente != "da comparare":
+            print(f"➖ Rimosso {id_cliente} da {nome_file}")
+
+        ws.delete_rows(2, ws.max_row)
+        for r in nuovi_dati:
+            ws.append(r)
+
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        media = MediaIoBaseUpload(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', resumable=True)
+
+        if file_id:
+            drive_service.files().update(fileId=file_id, media_body=media).execute()
+        else:
+            file_metadata = {
+                'name': nome_file,
+                'parents': [sotto_cartella_id],
+                'mimeType': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            }
+            drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+
+        return jsonify({"message": f"File sincronizzato per {id_cliente}"}), 200
+
+    except Exception as e:
+        print(f"❌ Errore nella sincronizzazione cliente: {e}")
+        return jsonify({"message": "Errore nella sincronizzazione", "error": str(e)}), 500
+
 
 
 @app.route("/verifica-clienti-comparare", methods=["POST"])

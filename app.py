@@ -1055,98 +1055,104 @@ def verifica_clienti_da_comparare():
     if 'agente' not in session:
         return jsonify({"message": "Non autenticato"}), 401
 
-    from openpyxl import Workbook, load_workbook
-    from io import BytesIO
-    from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
+    try:
+        from openpyxl import Workbook, load_workbook
+        from io import BytesIO
+        from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
 
-    agente = session["agente"]
-    nome_file = f"clienti_da_comparare_{agente}.xlsx"
-    nome_cartella = "Da_Comparare"
+        agente = session["agente"]
+        nome_file = f"clienti_da_comparare_{agente}.xlsx"
+        nome_cartella = "Da_Comparare"
 
-    # 1. Recupera o crea la cartella "Da_Comparare" dentro CRM_Documenti
-    query = (
-        f"name = '{nome_cartella}' and mimeType = 'application/vnd.google-apps.folder' "
-        f"and '{main_folder_id}' in parents and trashed = false"
-    )
-    results = drive_service.files().list(q=query, spaces='drive', fields="files(id)").execute()
-    folders = results.get("files", [])
+        # 1. Recupera o crea la cartella "Da_Comparare" dentro CRM_Documenti
+        query = (
+            f"name = '{nome_cartella}' and mimeType = 'application/vnd.google-apps.folder' "
+            f"and '{main_folder_id}' in parents and trashed = false"
+        )
+        results = drive_service.files().list(q=query, spaces='drive', fields="files(id)").execute()
+        folders = results.get("files", [])
 
-    if folders:
-        sotto_cartella_id = folders[0]["id"]
-    else:
-        file_metadata = {
-            "name": nome_cartella,
-            "mimeType": "application/vnd.google-apps.folder",
-            "parents": [main_folder_id]
-        }
-        folder = drive_service.files().create(body=file_metadata, fields="id").execute()
-        sotto_cartella_id = folder["id"]
+        if folders:
+            sotto_cartella_id = folders[0]["id"]
+        else:
+            file_metadata = {
+                "name": nome_cartella,
+                "mimeType": "application/vnd.google-apps.folder",
+                "parents": [main_folder_id]
+            }
+            folder = drive_service.files().create(body=file_metadata, fields="id").execute()
+            sotto_cartella_id = folder["id"]
 
-    # 2. Filtra clienti dell’agente con stato "Da comparare"
-    clienti = clienti_sheet.get_all_records()
-    clienti_da_comparare = [c for c in clienti if c.get("Agente") == agente and c.get("Stato", "").strip().lower() == "da comparare"]
+        # 2. Filtra clienti dell’agente con stato "Da comparare"
+        clienti = clienti_sheet.get_all_records()
+        clienti_da_comparare = [c for c in clienti if c.get("Agente") == agente and c.get("Stato", "").strip().lower() == "da comparare"]
 
-    # 3. Cerca il file dell’agente su Drive
-    query = (
-        f"name = '{nome_file}' and mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' "
-        f"and '{sotto_cartella_id}' in parents and trashed = false"
-    )
-    results = drive_service.files().list(q=query, spaces='drive', fields="files(id, name)").execute()
-    files = results.get('files', [])
+        # 3. Cerca il file dell’agente su Drive
+        query = (
+            f"name = '{nome_file}' and mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' "
+            f"and '{sotto_cartella_id}' in parents and trashed = false"
+        )
+        results = drive_service.files().list(q=query, spaces='drive', fields="files(id, name)").execute()
+        files = results.get('files', [])
 
-    file_id = None
-    wb = Workbook()
-    ws = wb.active
-    intestazioni = list(clienti[0].keys()) if clienti else []
-
-    if files:
-        file_id = files[0]["id"]
-        request_drive = drive_service.files().get_media(fileId=file_id)
-        fh = BytesIO()
-        downloader = MediaIoBaseDownload(fh, request_drive)
-        done = False
-        while not done:
-            status, done = downloader.next_chunk()
-        fh.seek(0)
-        wb = load_workbook(fh)
+        file_id = None
+        wb = Workbook()
         ws = wb.active
-        intestazioni = [cell.value for cell in ws[1]]
-    else:
-        ws.append(intestazioni)
+        intestazioni = list(clienti[0].keys()) if clienti else []
 
-    # 4. Rimuove righe non più "Da comparare"
-    id_col = intestazioni.index("ID_Cliente")
-    righe = list(ws.iter_rows(min_row=2, values_only=True))
-    da_comparare_ids = [c["ID_Cliente"] for c in clienti_da_comparare]
-    righe_valide = [r for r in righe if r[id_col] in da_comparare_ids]
+        if files:
+            file_id = files[0]["id"]
+            request_drive = drive_service.files().get_media(fileId=file_id)
+            fh = BytesIO()
+            downloader = MediaIoBaseDownload(fh, request_drive)
+            done = False
+            while not done:
+                status, done = downloader.next_chunk()
+            fh.seek(0)
+            wb = load_workbook(fh)
+            ws = wb.active
+            intestazioni = [cell.value for cell in ws[1]]
+        else:
+            ws.append(intestazioni)
 
-    ws.delete_rows(2, ws.max_row)
-    for riga in righe_valide:
-        ws.append(riga)
+        # 4. Rimuove righe non più "Da comparare"
+        id_col = intestazioni.index("ID_Cliente")
+        righe = list(ws.iter_rows(min_row=2, values_only=True))
+        da_comparare_ids = [c["ID_Cliente"] for c in clienti_da_comparare]
+        righe_valide = [r for r in righe if r[id_col] in da_comparare_ids]
 
-    # 5. Aggiunge nuovi clienti
-    gia_presenti = [r[id_col] for r in righe_valide]
-    for cliente in clienti_da_comparare:
-        if cliente["ID_Cliente"] not in gia_presenti:
-            ws.append([cliente.get(col, "") for col in intestazioni])
+        ws.delete_rows(2, ws.max_row)
+        for riga in righe_valide:
+            ws.append(riga)
 
-    # 6. Salva il file aggiornato su Drive
-    output = BytesIO()
-    wb.save(output)
-    output.seek(0)
-    media = MediaIoBaseUpload(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', resumable=True)
+        # 5. Aggiunge nuovi clienti
+        gia_presenti = [r[id_col] for r in righe_valide]
+        for cliente in clienti_da_comparare:
+            if cliente["ID_Cliente"] not in gia_presenti:
+                ws.append([cliente.get(col, "") for col in intestazioni])
 
-    if file_id:
-        drive_service.files().update(fileId=file_id, media_body=media).execute()
-    else:
-        file_metadata = {
-            'name': nome_file,
-            'parents': [sotto_cartella_id],
-            'mimeType': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        }
-        drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+        # 6. Salva il file aggiornato su Drive
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        media = MediaIoBaseUpload(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', resumable=True)
 
-    return jsonify({"message": f"Verifica completata per {nome_file}"}), 200
+        if file_id:
+            drive_service.files().update(fileId=file_id, media_body=media).execute()
+        else:
+            file_metadata = {
+                'name': nome_file,
+                'parents': [sotto_cartella_id],
+                'mimeType': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            }
+            drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+
+        return jsonify({"message": f"Verifica completata per {nome_file}"}), 200
+
+    except Exception as e:
+        print(f"❌ Errore verifica comparazione: {e}")
+        return jsonify({"message": "Errore durante la verifica", "error": str(e)}), 500
+
 
 
 # -------------------------------------------------------------------

@@ -246,11 +246,13 @@ def add_cliente():
         data.get("Nuovo_Fornitore"),
         data.get("Codice_Fiscale"),
         data.get("Partita_IVA"),
-        codice_agente              
+        codice_agente,
+        "",
+        data_oggi
     ]
     clienti_sheet.append_row(new_row)
     return jsonify({"message": f"Cliente aggiunto con ID {nuovo_id}"}), 201
-
+    
 @app.route("/clienti/<id_cliente>", methods=["PUT"])
 def aggiorna_cliente(id_cliente):
     if 'agente' not in session:

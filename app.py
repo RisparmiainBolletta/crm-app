@@ -229,6 +229,8 @@ def add_cliente():
     prossimo_numero = max(numeri_usati) + 1 if numeri_usati else 1
     nuovo_id = f"{codice_agente}-{prossimo_numero:04d}"
 
+    data_oggi = datetime.today().strftime("%d/%m/%Y")
+
     new_row = [
         nuovo_id,                    
         data.get("Nome"),           

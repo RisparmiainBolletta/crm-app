@@ -215,6 +215,16 @@ def add_cliente():
         return jsonify({"message": "Non autenticato"}), 401
 
     data = request.json
+
+    # ✨ Normalizza nome, città e provincia
+    def title_case(val):
+        return " ".join(word.capitalize() for word in val.strip().split()) if val else ""
+
+    nome = title_case(data.get("Nome", ""))
+    citta = title_case(data.get("Citta", ""))
+    provincia = title_case(data.get("Provincia", ""))
+
+
     records = clienti_sheet.get_all_records()
     clienti_agente = [c for c in records if str(c.get("Agente")) == codice_agente]
 
@@ -233,12 +243,12 @@ def add_cliente():
 
     new_row = [
         nuovo_id,                    
-        data.get("Nome"),           
+        nome,           
         data.get("Categoria"),
         data.get("Email"),          
         data.get("Telefono"),
-        data.get("Citta"),
-        data.get("Provincia"),
+        citta,
+        provincia,
         data.get("Stato"),          
         "",                          
         data.get("POD_PDR"),
@@ -252,13 +262,23 @@ def add_cliente():
     ]
     clienti_sheet.append_row(new_row)
     return jsonify({"message": f"Cliente aggiunto con ID {nuovo_id}"}), 201
-    
+
 @app.route("/clienti/<id_cliente>", methods=["PUT"])
 def aggiorna_cliente(id_cliente):
     if 'agente' not in session:
         return jsonify({"message": "Non autenticato"}), 401
 
     data = request.json
+
+    # ✨ Normalizza nome, città e provincia
+    def title_case(val):
+        return " ".join(word.capitalize() for word in val.strip().split()) if val else ""
+
+    nome = title_case(data.get("Nome", ""))
+    citta = title_case(data.get("Città", ""))
+    provincia = title_case(data.get("Provincia", ""))
+
+
     agente = session['agente']
     tutti = clienti_sheet.get_all_records()
 
@@ -269,12 +289,12 @@ def aggiorna_cliente(id_cliente):
             stato_nuovo = data.get("Stato", "").strip().lower()
 
             # 🔁 Aggiorna campi
-            clienti_sheet.update(f"B{riga_excel}", [[data["Nome"]]])
+            clienti_sheet.update(f"B{riga_excel}", [[nome]])
             clienti_sheet.update(f"C{riga_excel}", [[data["Categoria"]]])
             clienti_sheet.update(f"D{riga_excel}", [[data["Email"]]])
             clienti_sheet.update(f"E{riga_excel}", [[data["Telefono"]]])
-            clienti_sheet.update(f"F{riga_excel}", [[data["Città"]]])
-            clienti_sheet.update(f"G{riga_excel}", [[data["Provincia"]]])
+            clienti_sheet.update(f"F{riga_excel}", [[citta]])
+            clienti_sheet.update(f"G{riga_excel}", [[provincia]])
             clienti_sheet.update(f"H{riga_excel}", [[data["Stato"]]])
             clienti_sheet.update(f"J{riga_excel}", [[data["POD_PDR"]]])
             clienti_sheet.update(f"K{riga_excel}", [[data["Settore"]]])

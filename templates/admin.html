@@ -1,0 +1,68 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}CRM Admin{% endblock %}
+
+{% block content %}
+
+<!-- Intestazione Admin -->
+<div id="profilo-agente" style="font-weight: bold; font-size: 0.8em; margin-bottom: 0.3rem;">
+    <!-- Qui comparirà il nome dell'utente -->
+</div>
+
+<!-- Barra superiore: Titolo + Nuovo Cliente + Ricerca -->
+<div class="intestazione-admin" style="margin-bottom: 6px;">
+    <div class="intestazione-dx">
+        <h3 style="padding: 10px;">Elenco Clienti (Admin)</h3>
+        <!--<button id="btn-apri-modale">➕ Nuovo Cliente</button>-->
+        <input type="text" id="filtro-clienti" placeholder="🔍 Cerca cliente..." style="padding: 6px 6px; width: 250px;">
+    </div>
+</div>
+
+<!-- MODALE DOCUMENTI ADMIN -->
+<div id="modale-documenti-admin" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="document.getElementById('modale-documenti-admin').style.display='none'">×</span>
+        <h2 id="titolo-documenti-admin">Documenti Cliente</h2>
+
+        <!--<form id="form-upload-admin">
+            <input type="file" id="file-allegato-admin" name="file" required>
+            <button type="submit">📤 Carica File</button>
+        </form>-->
+
+        <ul id="lista-documenti-admin"></ul>
+    </div>
+</div>
+
+
+<!-- Contenitore tabella clienti -->
+<div id="tabella-clienti">
+    <table>
+        <thead>
+            <tr>
+                <th>ID Cliente</th>
+                <th>Data Inserimento</th>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Email</th>
+                <th>Telefono</th>
+                <th>Settore</th>
+                <th>Stato</th>
+                <th>Azioni</th>
+            </tr>
+        </thead>
+        <tbody id="tbody-clienti">
+            <!-- righe generate da admin.js -->
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/dropdowns.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/modifica.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/documenti.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/interazioni.js') }}"></script>
+<!--<script type="module" src="{{ url_for('static', filename='js/documenti_admin.js') }}"></script>-->
+{% endblock %}

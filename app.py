@@ -1341,7 +1341,7 @@ def aggiorna_provvigione_admin(id_cliente):
     return jsonify({"message": "Cliente non trovato"}), 404
 
 # -------------------------------------------------------------------
-#  H) GRAFICO RENDIMENTO
+#  H) GRAFICI
 # -------------------------------------------------------------------
 @app.route("/api/rendimento")
 def rendimento_agenti():
@@ -1467,6 +1467,21 @@ def rendimento_agente():
     return jsonify(dati)
 
 
+# Grafico a torta
+@app.route("/dashboard")
+def dashboard():
+    if 'agente' not in session and session.get("ruolo") != "admin":
+        return redirect(url_for("login"))  # O qualunque sia la tua pagina di login
+    return render_template("dashboard.html")
+
+@app.route("/dashboard-admin")
+def dashboard_admin():
+    if 'agente' not in session or session.get("ruolo", "").lower() != "admin":
+        return redirect("/")  # Evita accesso non autorizzato
+    return render_template("dashboard_admin.html")
+
+
+
 @app.route("/rendimento-agente")
 def pagina_rendimento_agente():
     if "agente" not in session:
@@ -1483,7 +1498,74 @@ def pagina_rendimento_agenti():
         return redirect("/login")
     return render_template("rendimento.html")
 
+# -------------------------------------------------------------------
+#  L Rendimento mensile per agente
+# -------------------------------------------------------------------
 
+@app.route("/rendimento-mensile")
+def rendimento_mensile():
+    if session.get("ruolo", "").lower() != "admin":
+        return redirect("/")
+    return render_template("rendimento_mensile.html")
+
+
+@app.route("/api/rendimento-mensile")
+def api_rendimento_mensile():
+    try:
+        mese = request.args.get("mese", "")
+        anno = request.args.get("anno", "")
+
+        clienti = clienti_sheet.get_all_records()
+
+        filtro_competenza = f"/{anno}" if anno else ""
+
+        # Dizionario per aggregare provvigioni per agente per mese
+        dati_agenti = {}
+        mesi_map = {
+            "01": "Gennaio", "02": "Febbraio", "03": "Marzo", "04": "Aprile",
+            "05": "Maggio", "06": "Giugno", "07": "Luglio", "08": "Agosto",
+            "09": "Settembre", "10": "Ottobre", "11": "Novembre", "12": "Dicembre"
+        }
+
+        for c in clienti:
+            agente = c.get("Agente", "").strip()
+            competenza = c.get("Competenza", "").strip()
+            provv_raw = str(c.get("Provvigione", "")).replace(",", ".")
+
+            if not agente or not competenza or filtro_competenza not in competenza:
+                continue
+
+            mese_key = competenza.split("/")[0].zfill(2)
+            mese_nome = mesi_map.get(mese_key, "")
+            if not mese_nome:
+                continue
+
+            try:
+                provvigione = float(provv_raw)
+            except:
+                provvigione = 0.0
+
+            if agente not in dati_agenti:
+                dati_agenti[agente] = {m: 0.0 for m in mesi_map.values()}
+
+            dati_agenti[agente][mese_nome] += provvigione / 100
+
+        # Genera lista finale ordinata con Totale
+        risultato = []
+        for agente, mesi in sorted(dati_agenti.items()):
+            totale = sum(mesi.values())
+            riga = {
+                "Agente": agente,
+                **{m: round(mesi[m], 2) for m in mesi_map.values()},
+                "Totale": round(totale, 2)
+            }
+            risultato.append(riga)
+
+        return jsonify(risultato)
+
+    except Exception as e:
+        print("❌ Errore rendimento mensile:", str(e))
+        return jsonify({"error": str(e)}), 500
 
 
 ###if __name__ == '__main__':

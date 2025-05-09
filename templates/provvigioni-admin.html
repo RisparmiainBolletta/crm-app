@@ -1,0 +1,45 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Provvigioni (Admin){% endblock %}
+
+{% block content %}
+<div id="profilo-agente" style="font-weight: bold; font-size: 0.8em; margin-bottom: 0.3rem;"></div>
+
+<div class="provvigioni-header">
+    <h2 class="provvigioni-title">📊 Provvigioni (Admin)</h2>
+    <!-- Descrizione subito sotto -->
+    <p style="font-size: 0.75em;">
+        Visualizza tutte le provvigioni maturate dai clienti gestiti dagli agenti.
+    </p>
+    <input type="text" id="filtro-competenza" placeholder="📅 Filtro Competenza (es. 04/2025)" style="margin-left: 1rem; padding: 6px; width: 220px;">
+    <input type="text" id="filtro-provvigioni-admin" placeholder="🔍 Cerca per nome, ID, fornitore..." style="margin-bottom: 0.2rem; padding: 6px; width: 300px;">
+    <div class="provvigioni-totale">
+        Totale Provvigioni: <span id="totale-provvigioni-admin">€ 0,00</span>
+    </div>
+</div>
+
+<div id="contenitore-tabella">
+    <table id="tabella-provvigioni" class="display" style="width: 100%; margin-top: 0.2rem;">
+        <thead>
+            <tr id="thead-provvigioni-admin">
+                <th data-chiave="Competenza">Competenza</th>
+                <th data-chiave="ID_Cliente">ID Cliente</th>
+                <th data-chiave="Nome">Nome</th>
+                <th data-chiave="Categoria">Categoria</th>
+                <th data-chiave="Stato">Stato</th>
+                <th data-chiave="Settore">Settore</th>
+                <th data-chiave="Nuovo_Fornitore">Nuovo Fornitore</th>
+                <th style="text-align: right;" data-chiave="Provvigione">Provvigione</th>
+            </tr>
+        </thead>
+        <tbody id="tbody-provvigioni-admin">
+            <!-- Compilato dinamicamente -->
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/provvigioni_admin.js') }}"></script>
+{% endblock %}

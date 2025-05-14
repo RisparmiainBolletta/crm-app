@@ -228,6 +228,13 @@ def add_cliente():
     records = clienti_sheet.get_all_records()
     clienti_agente = [c for c in records if str(c.get("Agente")) == codice_agente]
 
+    # Conversione Scadenza_Offerta nel formato richiesto (gg/mm/aa)
+    scadenza_offerta_raw = data.get("Scadenza_Offerta", "")
+    if scadenza_offerta_raw:
+        scadenza_offerta = datetime.strptime(scadenza_offerta_raw, "%Y-%m-%d").strftime("%d/%m/%Y")
+    else:
+        scadenza_offerta = ""
+
     # Trova ID più alto esistente per quell'agente
     numeri_usati = []
     for cliente in clienti_agente:
@@ -250,15 +257,18 @@ def add_cliente():
         citta,
         provincia,
         data.get("Stato"),          
-        "",                          
+        "",                             # Provvigione                         
         data.get("POD_PDR"),
         data.get("Settore"),
         data.get("Nuovo_Fornitore"),
         data.get("Codice_Fiscale"),
         data.get("Partita_IVA"),
         codice_agente,
-        "",
-        data_oggi
+        "",                             # Competenza
+        data_oggi,
+        data.get("Metodo_Pagamento"),
+        data.get("Invio_Bolletta"),
+        scadenza_offerta
     ]
     clienti_sheet.append_row(new_row)
     return jsonify({"message": f"Cliente aggiunto con ID {nuovo_id}"}), 201
@@ -270,14 +280,18 @@ def aggiorna_cliente(id_cliente):
 
     data = request.json
 
-    # ✨ Normalizza nome, città e provincia
     def title_case(val):
         return " ".join(word.capitalize() for word in val.strip().split()) if val else ""
+
+    scadenza_offerta_raw = data.get("Scadenza_Offerta", "")
+    if scadenza_offerta_raw:
+        scadenza_offerta = datetime.strptime(scadenza_offerta_raw, "%Y-%m-%d").strftime("%d/%m/%Y")
+    else:
+        scadenza_offerta = ""
 
     nome = title_case(data.get("Nome", ""))
     citta = title_case(data.get("Città", ""))
     provincia = title_case(data.get("Provincia", ""))
-
 
     agente = session['agente']
     tutti = clienti_sheet.get_all_records()
@@ -288,21 +302,23 @@ def aggiorna_cliente(id_cliente):
             stato_precedente = cliente.get("Stato", "").strip().lower()
             stato_nuovo = data.get("Stato", "").strip().lower()
 
-            # 🔁 Aggiorna campi
-            clienti_sheet.update(f"B{riga_excel}", [[nome]])
-            clienti_sheet.update(f"C{riga_excel}", [[data["Categoria"]]])
-            clienti_sheet.update(f"D{riga_excel}", [[data["Email"]]])
-            clienti_sheet.update(f"E{riga_excel}", [[data["Telefono"]]])
-            clienti_sheet.update(f"F{riga_excel}", [[citta]])
-            clienti_sheet.update(f"G{riga_excel}", [[provincia]])
-            clienti_sheet.update(f"H{riga_excel}", [[data["Stato"]]])
-            clienti_sheet.update(f"J{riga_excel}", [[data["POD_PDR"]]])
-            clienti_sheet.update(f"K{riga_excel}", [[data["Settore"]]])
-            clienti_sheet.update(f"L{riga_excel}", [[data["Nuovo_Fornitore"]]])
-            clienti_sheet.update(f"M{riga_excel}", [[data["Codice_Fiscale"]]])
-            clienti_sheet.update(f"N{riga_excel}", [[data["Partita_IVA"]]])
+            # ✅ Nuova sintassi gspread: values prima, range dopo
+            clienti_sheet.update(values=[[nome]], range_name=f"B{riga_excel}")
+            clienti_sheet.update(values=[[data["Categoria"]]], range_name=f"C{riga_excel}")
+            clienti_sheet.update(values=[[data["Email"]]], range_name=f"D{riga_excel}")
+            clienti_sheet.update(values=[[data["Telefono"]]], range_name=f"E{riga_excel}")
+            clienti_sheet.update(values=[[citta]], range_name=f"F{riga_excel}")
+            clienti_sheet.update(values=[[provincia]], range_name=f"G{riga_excel}")
+            clienti_sheet.update(values=[[data["Stato"]]], range_name=f"H{riga_excel}")
+            clienti_sheet.update(values=[[data["POD_PDR"]]], range_name=f"J{riga_excel}")
+            clienti_sheet.update(values=[[data["Settore"]]], range_name=f"K{riga_excel}")
+            clienti_sheet.update(values=[[data["Nuovo_Fornitore"]]], range_name=f"L{riga_excel}")
+            clienti_sheet.update(values=[[data["Codice_Fiscale"]]], range_name=f"M{riga_excel}")
+            clienti_sheet.update(values=[[data["Partita_IVA"]]], range_name=f"N{riga_excel}")
+            clienti_sheet.update(values=[[data["Metodo_Pagamento"]]], range_name=f"R{riga_excel}")
+            clienti_sheet.update(values=[[data["Invio_Bolletta"]]], range_name=f"S{riga_excel}")
+            clienti_sheet.update(values=[[scadenza_offerta]], range_name=f"T{riga_excel}")
 
-            # 🔁 Verifica stato "Da comparare"
             if stato_precedente != stato_nuovo and ("da comparare" in [stato_precedente, stato_nuovo]):
                 from requests import post
                 try:
@@ -316,31 +332,55 @@ def aggiorna_cliente(id_cliente):
     return jsonify({"message": "Cliente non trovato"}), 404
 
 
+
 @app.route("/admin/clienti/<id_cliente>", methods=["PUT"])
 def admin_modifica_cliente(id_cliente):
     if 'agente' not in session or session.get("ruolo") != "admin":
         return jsonify({"message": "Non autorizzato"}), 401
 
     data = request.json
+
+    # Conversione Scadenza_Offerta nel formato gg/mm/aa
+    scadenza_offerta_raw = data.get("Scadenza_Offerta", "")
+    if scadenza_offerta_raw:
+        scadenza_offerta = datetime.strptime(scadenza_offerta_raw, "%Y-%m-%d").strftime("%d/%m/%Y")
+    else:
+        scadenza_offerta = ""
+
     tutti = clienti_sheet.get_all_records()
 
     for idx, cliente in enumerate(tutti):
         if cliente["ID_Cliente"] == id_cliente:
             riga_excel = idx + 2  # +2 = salta intestazione
+            stato_precedente = cliente.get("Stato", "").strip().lower()
+            stato_nuovo = data.get("Stato", "").strip().lower()
 
             try:
-                clienti_sheet.update(f"B{riga_excel}", [[data["Nome"]]])
-                clienti_sheet.update(f"C{riga_excel}", [[data["Categoria"]]])
-                clienti_sheet.update(f"D{riga_excel}", [[data["Email"]]])
-                clienti_sheet.update(f"E{riga_excel}", [[data["Telefono"]]])
-                clienti_sheet.update(f"F{riga_excel}", [[data["Città"]]])
-                clienti_sheet.update(f"G{riga_excel}", [[data["Provincia"]]])
-                clienti_sheet.update(f"H{riga_excel}", [[data["Stato"]]])
-                clienti_sheet.update(f"J{riga_excel}", [[data["POD_PDR"]]])
-                clienti_sheet.update(f"K{riga_excel}", [[data["Settore"]]])
-                clienti_sheet.update(f"L{riga_excel}", [[data["Nuovo_Fornitore"]]])
-                clienti_sheet.update(f"M{riga_excel}", [[data["Codice_Fiscale"]]])
-                clienti_sheet.update(f"N{riga_excel}", [[data["Partita_IVA"]]])
+                clienti_sheet.update(values=[[data["Nome"]]], range_name=f"B{riga_excel}")
+                clienti_sheet.update(values=[[data["Categoria"]]], range_name=f"C{riga_excel}")
+                clienti_sheet.update(values=[[data["Email"]]], range_name=f"D{riga_excel}")
+                clienti_sheet.update(values=[[data["Telefono"]]], range_name=f"E{riga_excel}")
+                clienti_sheet.update(values=[[data["Città"]]], range_name=f"F{riga_excel}")
+                clienti_sheet.update(values=[[data["Provincia"]]], range_name=f"G{riga_excel}")
+                clienti_sheet.update(values=[[data["Stato"]]], range_name=f"H{riga_excel}")
+                clienti_sheet.update(values=[[data["POD_PDR"]]], range_name=f"J{riga_excel}")
+                clienti_sheet.update(values=[[data["Settore"]]], range_name=f"K{riga_excel}")
+                clienti_sheet.update(values=[[data["Nuovo_Fornitore"]]], range_name=f"L{riga_excel}")
+                clienti_sheet.update(values=[[data["Codice_Fiscale"]]], range_name=f"M{riga_excel}")
+                clienti_sheet.update(values=[[data["Partita_IVA"]]], range_name=f"N{riga_excel}")
+                clienti_sheet.update(values=[[data["Metodo_Pagamento"]]], range_name=f"R{riga_excel}")
+                clienti_sheet.update(values=[[data["Invio_Bolletta"]]], range_name=f"S{riga_excel}")
+                clienti_sheet.update(values=[[scadenza_offerta]], range_name=f"T{riga_excel}")
+
+                # Dopo aggiornamento dei campi
+                if stato_nuovo.strip().lower() == "da comparare" or stato_precedente == "da comparare":
+                    try:
+                        from requests import post
+                        post(f"http://127.0.0.1:5000/sincronizza-da-comparare/{id_cliente}", json={"Stato": stato_nuovo})
+                        print(f"🔁 Verifica sincronizzazione file comparazioni per cliente {id_cliente}")
+                    except Exception as e:
+                        print("⚠️ Errore nella sincronizzazione da comparare (admin):", e)
+
 
                 return jsonify({"message": "Cliente aggiornato correttamente (admin)"}), 200
 
@@ -349,7 +389,6 @@ def admin_modifica_cliente(id_cliente):
                 return jsonify({"error": str(e)}), 500
 
     return jsonify({"message": "Cliente non trovato"}), 404
-
 
 
 @app.route("/clienti/<id_cliente>", methods=["DELETE"])
@@ -960,17 +999,26 @@ def sincronizza_cliente_da_comparare(id_cliente):
     from io import BytesIO
     from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
 
-    if 'agente' not in session:
+    # ✅ Supporta agenti e admin
+    if 'agente' not in session and session.get("ruolo") != "admin":
         return jsonify({"message": "Non autenticato"}), 401
 
     try:
-        stato_corrente = request.json.get("Stato", "").strip().lower()
-        codice_agente = session["agente"]
+        stato_corrente = (request.json or {}).get("Stato", "").strip().lower()
 
+        # 👥 Recupero cliente e codice agente
         clienti = clienti_sheet.get_all_records()
-        cliente = next((c for c in clienti if c.get("ID_Cliente") == id_cliente and c.get("Agente") == codice_agente), None)
-        if not cliente:
-            return jsonify({"message": "Cliente non trovato"}), 404
+
+        if session.get("ruolo") == "admin":
+            cliente = next((c for c in clienti if c.get("ID_Cliente") == id_cliente), None)
+            if not cliente:
+                return jsonify({"message": "Cliente non trovato"}), 404
+            codice_agente = cliente.get("Agente", "")
+        else:
+            codice_agente = session["agente"]
+            cliente = next((c for c in clienti if c.get("ID_Cliente") == id_cliente and c.get("Agente") == codice_agente), None)
+            if not cliente:
+                return jsonify({"message": "Cliente non trovato"}), 404
 
         nome_file = f"clienti_da_comparare_{codice_agente}.xlsx"
         nome_cartella = "Da_Comparare"
@@ -994,7 +1042,7 @@ def sincronizza_cliente_da_comparare(id_cliente):
             folder = drive_service.files().create(body=file_metadata, fields="id").execute()
             sotto_cartella_id = folder["id"]
 
-        # Cerca file
+        # 📄 Cerca file esistente
         query = (
             f"name = '{nome_file}' and mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' "
             f"and '{sotto_cartella_id}' in parents and trashed = false"
@@ -1027,7 +1075,8 @@ def sincronizza_cliente_da_comparare(id_cliente):
             wb = Workbook()
             ws = wb.active
             ws.append(intestazioni)
-
+        
+        # ✏️ Aggiunge/rimuove cliente
         id_col = intestazioni.index("ID_Cliente")
         righe = list(ws.iter_rows(min_row=2, values_only=True))
         nuovi_dati = []
@@ -1051,6 +1100,7 @@ def sincronizza_cliente_da_comparare(id_cliente):
         for r in nuovi_dati:
             ws.append(r)
 
+        # 💾 Salva su Drive
         output = BytesIO()
         wb.save(output)
         output.seek(0)
@@ -1566,7 +1616,6 @@ def api_rendimento_mensile():
     except Exception as e:
         print("❌ Errore rendimento mensile:", str(e))
         return jsonify({"error": str(e)}), 500
-
 
 ###if __name__ == '__main__':
 ###    app.run(debug=True)

@@ -1,0 +1,288 @@
+﻿<!-- modals.html -->
+<!-- MODALE NUOVO CLIENTE -->
+<div class="modal" id="modale-nuovo-cliente">
+    <div class="modal-content dettagli-content">
+        <span class="close-button" onclick="document.getElementById('modale-nuovo-cliente').style.display='none'">×</span>
+        <h3>➕ Nuovo Cliente</h3>
+
+        <form id="form-nuovo-cliente" class="form-griglia">
+            <div class="campo">
+                <label for="nuovo-nome">Nome e Cognome/Denominazione</label>
+                <input type="text" id="nuovo-nome">
+            </div>
+
+            <div class="campo">
+                <label for="nuovo-categoria">Categoria</label>
+                <select id="nuovo-categoria"></select>
+            </div>
+
+            <div class="campo">
+                <label for="nuovo-settore">Settore</label>
+                <select id="nuovo-settore"></select>
+            </div>
+
+            <div class="campo">
+                <label for="nuovo-email">Email</label>
+                <input type="email" id="nuovo-email">
+            </div>
+
+            <div class="campo">
+                <label for="nuovo-telefono">Telefono</label>
+                <input type="text" id="nuovo-telefono">
+            </div>
+
+            <div class="campo">
+                <label for="nuovo-citta">Città</label>
+                <input type="text" id="nuovo-citta">
+            </div>
+
+            <div class="campo">
+                <label for="nuovo-provincia">Provincia</label>
+                <input type="text" id="nuovo-provincia">
+            </div>
+
+            <div class="campo">
+                <label for="nuovo-cf">Codice Fiscale</label>
+                <input type="text" id="nuovo-cf">
+            </div>
+
+            <div class="campo">
+                <label for="nuovo-piva">Partita IVA</label>
+                <input type="text" id="nuovo-piva">
+            </div>
+
+            <div class="campo">
+                <label for="nuovo-pod">POD/PDR</label>
+                <input type="text" id="nuovo-pod">
+            </div>
+
+            <div class="campo">
+                <label for="nuovo-fornitore">Attuale fornitore</label>
+                <input type="text" id="nuovo-fornitore">
+            </div>
+
+            <div class="campo">
+                <label for="nuovo-metodo-pagamento">Metodo pagamento</label>
+                <select id="nuovo-metodo-pagamento">
+                    <option value="">-- Seleziona --</option>
+                    <option>SDD</option>
+                    <option>Bollettino</option>
+                </select>
+            </div>
+
+            <div class="campo">
+                <label for="nuovo-invio-bolletta">Invio bolletta</label>
+                <select id="nuovo-invio-bolletta">
+                    <option value="">-- Seleziona --</option>
+                    <option>Email</option>
+                    <option>Cartacea</option>
+                </select>
+            </div>
+
+            <div class="campo">
+                <label for="nuovo-scadenza-offerta">Scadenza offerta</label>
+                <input type="date" id="nuovo-scadenza-offerta">
+            </div>
+
+            <div class="campo">
+                <label for="nuovo-stato">Stato</label>
+                <select id="nuovo-stato"></select>
+            </div>
+
+            <div class="campo-doppio">
+                <button type="submit">💾 Salva Cliente</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+<!-- Modale "Dettagli Cliente" -->
+<div id="modale-dettagli-cliente" class="modal">
+    <div class="modal-content dettagli-content">
+        <span class="close-button">&times;</span>
+        <h2>Dettagli Cliente 🔍</h2>
+
+        <div class="form-griglia-dettagli">
+            <div class="campo-dettaglio"><strong>Nome:</strong> <span id="dettagli-nome"></span></div>
+            <div class="campo-dettaglio"><strong>Categoria:</strong> <span id="dettagli-categoria"></span></div>
+            <div class="campo-dettaglio"><strong>POD/PDR:</strong> <span id="dettagli-pod"></span></div>
+            <div class="campo-dettaglio"><strong>Settore:</strong> <span id="dettagli-settore"></span></div>
+            <div class="campo-dettaglio"><strong>Email:</strong> <span id="dettagli-email"></span></div>
+            <div class="campo-dettaglio"><strong>Telefono:</strong> <span id="dettagli-telefono"></span></div>
+            <div class="campo-dettaglio"><strong>Città:</strong> <span id="dettagli-citta"></span></div>
+            <div class="campo-dettaglio"><strong>Provincia:</strong> <span id="dettagli-provincia"></span></div>
+            <div class="campo-dettaglio"><strong>Nuovo Fornitore:</strong> <span id="dettagli-fornitore"></span></div>
+            <div class="campo-dettaglio"><strong>Codice Fiscale:</strong> <span id="dettagli-cf"></span></div>
+            <div class="campo-dettaglio"><strong>Partita IVA:</strong> <span id="dettagli-piva"></span></div>
+            <div class="campo-dettaglio"><strong>Stato:</strong> <span id="dettagli-stato"></span></div>
+            <div class="campo-dettaglio"><strong>Metodo di Pagamento:</strong> <span id="dettagli-metodo-pagamento"></span></div>
+            <div class="campo-dettaglio"><strong>Invio Bolletta:</strong> <span id="dettagli-invio-bolletta"></span></div>
+            <div class="campo-dettaglio"><strong>Scadenza Offerta:</strong> <span id="dettagli-scadenza-offerta"></span></div>
+            <div class="campo-dettaglio"><strong>Provvigione:</strong> <span id="dettagli-provvigione"></span></div>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- Modale MODIFICA CLIENTE -->
+<div id="modale-modifica-cliente" class="modal">
+    <div class="modal-content dettagli-content">
+        <span class="close-button" onclick="document.getElementById('modale-modifica-cliente').style.display='none'">×</span>
+        <h2>Modifica Cliente</h2>
+
+        <form id="form-modifica" class="form-griglia">
+            <div class="campo-doppio">
+                <label for="mod-nome">Nome e Cognome/Denominazione</label>
+                <input type="text" id="mod-nome">
+            </div>
+            <div class="campo">
+                <label for="mod-id-cliente">Codice cliente:</label>
+                <input type="text" id="mod-id-cliente" readonly style="background-color: #eee;">
+            </div>
+            <div class="campo">
+                <label for="nuovo-categoria">Categoria</label>
+                <select id="mod-categoria"></select>
+            </div>
+            <div class="campo">
+                <label for="nuovo-pod">POD/PDR</label>
+                <input type="text" id="mod-pod">
+            </div>
+            <div class="campo">
+                <label for="nuovo-settore">Settore</label>
+                <select id="mod-settore"></select>
+            </div>
+            <div class="campo">
+                <label for="nuovo-email">Email</label>
+                <input type="email" id="mod-email">
+            </div>
+            <div class="campo">
+                <label for="nuovo-telefono">Telefono</label>
+                <input type="text" id="mod-telefono">
+            </div>
+            <div class="campo">
+                <label for="nuovo-citta">Città</label>
+                <input type="text" id="mod-citta">
+            </div>
+            <div class="campo">
+                <label>Provincia:</label>
+                <input type="text" id="mod-provincia">
+            </div>
+            <div class="campo">
+                <label>Nuovo Fornitore:</label>
+                <input type="text" id="mod-fornitore">
+            </div>
+            <div class="campo">
+                <label>Codice Fiscale:</label>
+                <input type="text" id="mod-cf">
+            </div>
+            <div class="campo">
+                <label>Partita IVA:</label>
+                <input type="text" id="mod-piva">
+            </div>
+
+            <div class="campo">
+                <label>Metodo pagamento</label>
+                <select id="mod-metodo-pagamento">
+                    <option value="">-- Seleziona --</option>
+                    <option>SDD</option>
+                    <option>Bollettino</option>
+                </select>
+            </div>
+
+            <div class="campo">
+                <label for="mod-invio-bolletta">Invio bolletta</label>
+                <select id="mod-invio-bolletta">
+                    <option value="">-- Seleziona --</option>
+                    <option>Email</option>
+                    <option>Cartacea</option>
+                </select>
+            </div>
+
+            <div class="campo">
+                <label for="mod-scadenza-offerta">Scadenza offerta</label>
+                <input type="date" id="mod-scadenza-offerta">
+            </div>
+
+            <div class="campo">
+                <label>Stato:</label>
+                <select id="mod-stato"></select>
+            </div>
+            <!--<div class="campo">
+            <label>Provvigione:</label>
+            <input type="text" id="mod-provvigione">
+        </div>-->
+            <div class="campo-doppio">
+                <button type="submit">💾 Salva Modifiche</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modale DOCUMENTI -->
+<div class="modal" id="modale-documenti">
+    <div class="modal-content">
+        <span class="close-button" onclick="document.getElementById('modale-documenti').style.display='none'">×</span>
+        <!--<h2>Documenti Cliente</h2>-->
+        <!--<h3 id="titolo-documenti">Documenti cliente</h3>-->
+        <h3 id="titolo-documenti" style="margin-bottom: 0.7em; color: #34495e; font-weight: bold;"></h3>
+
+
+        <form id="form-upload-file">
+            <input type="file" id="file-allegato" name="file">
+            <button type="submit">📤 Carica</button>
+        </form>
+
+        <ul id="lista-documenti"></ul>
+    </div>
+</div>
+
+<!-- MODALE INTERAZIONI -->
+<div id="modale-interazioni" class="modal">
+    <div class="modal-content" style="max-width: 750px;">
+        <span class="close-button" onclick="document.getElementById('modale-interazioni').style.display='none'">×</span>
+        <h2 id="interazioni-titolo">Interazioni Cliente</h2>
+
+        <!-- 📄 TABELLA INTERAZIONI -->
+        <table style="width: 100%; margin-bottom: 20px;">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Tipo</th>
+                    <th>Esito</th>
+                    <th>Inserito da</th>
+                    <th>Descrizione</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-interazioni">
+                <!-- Qui vengono caricate le righe -->
+            </tbody>
+
+        </table>
+
+        <!-- ➕ FORM NUOVA INTERAZIONE -->
+        <form id="form-nuova-interazione" class="form-griglia">
+            <div class="campo">
+                <label for="int-data">Data:</label>
+                <input type="date" id="int-data" required>
+            </div>
+            <div class="campo">
+                <label for="int-tipo">Tipo:</label>
+                <select id="int-tipo" required></select>
+            </div>
+            <div class="campo">
+                <label for="int-esito">Esito:</label>
+                <select id="int-esito" required></select>
+            </div>
+            <div class="campo-doppio">
+                <label for="int-descrizione">Descrizione:</label>
+                <textarea id="int-descrizione" rows="2" style="width: 100%; resize: vertical;" required></textarea>
+            </div>
+            <div class="campo-doppio">
+                <button type="submit">💬 Aggiungi Interazione</button>
+            </div>
+        </form>
+    </div>
+</div>

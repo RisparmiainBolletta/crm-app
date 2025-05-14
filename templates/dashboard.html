@@ -1,0 +1,29 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<h2 style="margin-top: 10px;">📊 Dashboard Clienti</h2>
+
+<!-- Controllo filtro per mese/anno -->
+<div style="margin: 10px 0;">
+    <label for="filtro-dashboard" style="font-weight: bold;">Filtra per mese/anno:</label>
+    <select id="filtro-dashboard">
+        <option value="">📅 Tutti</option>
+        <!-- Popolato dinamicamente -->
+    </select>
+</div>
+
+<!-- Contenitore grafico -->
+<div style="width: 100%; max-width: 40%; margin: auto; height: 60vh;">
+    <canvas id="grafico-stato-clienti"></canvas>
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

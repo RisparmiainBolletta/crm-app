@@ -91,6 +91,7 @@ agenti_sheet = client.open("CRM_Database").worksheet("Agenti")              # Fo
 interazioni_sheet = client.open("CRM_Database").worksheet("Interazioni")    # Foglio delle interazioni
 filelog_sheet = client.open("CRM_Database").worksheet("File_Allegati")      # Foglio con log dei file/documenti
 impostazioni_sheet = client.open("CRM_Database").worksheet("Impostazioni")  # Foglio per dropdown dinamici
+listino_sheet = client.open("CRM_Database").worksheet("Listino_Provvigioni")
 
 # -------------------------------------------------------------------
 #  A) FUNZIONI DI LOGIN / LOGOUT
@@ -347,40 +348,58 @@ def admin_modifica_cliente(id_cliente):
     else:
         scadenza_offerta = ""
 
+    stato_nuovo = data.get("Stato", "").strip().lower()
+
     tutti = clienti_sheet.get_all_records()
 
     for idx, cliente in enumerate(tutti):
         if cliente["ID_Cliente"] == id_cliente:
-            riga_excel = idx + 2  # +2 = salta intestazione
-            stato_precedente = cliente.get("Stato", "").strip().lower()
-            stato_nuovo = data.get("Stato", "").strip().lower()
+            riga_excel = idx + 2  # +2 per intestazione
 
             try:
-                clienti_sheet.update(values=[[data["Nome"]]], range_name=f"B{riga_excel}")
-                clienti_sheet.update(values=[[data["Categoria"]]], range_name=f"C{riga_excel}")
-                clienti_sheet.update(values=[[data["Email"]]], range_name=f"D{riga_excel}")
-                clienti_sheet.update(values=[[data["Telefono"]]], range_name=f"E{riga_excel}")
-                clienti_sheet.update(values=[[data["Città"]]], range_name=f"F{riga_excel}")
-                clienti_sheet.update(values=[[data["Provincia"]]], range_name=f"G{riga_excel}")
-                clienti_sheet.update(values=[[data["Stato"]]], range_name=f"H{riga_excel}")
-                clienti_sheet.update(values=[[data["POD_PDR"]]], range_name=f"J{riga_excel}")
-                clienti_sheet.update(values=[[data["Settore"]]], range_name=f"K{riga_excel}")
-                clienti_sheet.update(values=[[data["Nuovo_Fornitore"]]], range_name=f"L{riga_excel}")
-                clienti_sheet.update(values=[[data["Codice_Fiscale"]]], range_name=f"M{riga_excel}")
-                clienti_sheet.update(values=[[data["Partita_IVA"]]], range_name=f"N{riga_excel}")
-                clienti_sheet.update(values=[[data["Metodo_Pagamento"]]], range_name=f"R{riga_excel}")
-                clienti_sheet.update(values=[[data["Invio_Bolletta"]]], range_name=f"S{riga_excel}")
-                clienti_sheet.update(values=[[scadenza_offerta]], range_name=f"T{riga_excel}")
+                # ✅ Aggiornamento solo se i campi sono presenti nel JSON
+                if "Nome" in data:
+                    clienti_sheet.update(values=[[data["Nome"]]], range_name=f"B{riga_excel}")
+                if "Categoria" in data:
+                    clienti_sheet.update(values=[[data["Categoria"]]], range_name=f"C{riga_excel}")
+                if "Email" in data:
+                    clienti_sheet.update(values=[[data["Email"]]], range_name=f"D{riga_excel}")
+                if "Telefono" in data:
+                    clienti_sheet.update(values=[[data["Telefono"]]], range_name=f"E{riga_excel}")
+                if "Città" in data:
+                    clienti_sheet.update(values=[[data["Città"]]], range_name=f"F{riga_excel}")
+                if "Provincia" in data:
+                    clienti_sheet.update(values=[[data["Provincia"]]], range_name=f"G{riga_excel}")
+                if "Stato" in data:
+                    clienti_sheet.update(values=[[data["Stato"]]], range_name=f"H{riga_excel}")
+                if "POD_PDR" in data:
+                    clienti_sheet.update(values=[[data["POD_PDR"]]], range_name=f"J{riga_excel}")
+                if "Settore" in data:
+                    clienti_sheet.update(values=[[data["Settore"]]], range_name=f"K{riga_excel}")
+                if "Nuovo_Fornitore" in data:
+                    clienti_sheet.update(values=[[data["Nuovo_Fornitore"]]], range_name=f"L{riga_excel}")
+                if "Codice_Fiscale" in data:
+                    clienti_sheet.update(values=[[data["Codice_Fiscale"]]], range_name=f"M{riga_excel}")
+                if "Partita_IVA" in data:
+                    clienti_sheet.update(values=[[data["Partita_IVA"]]], range_name=f"N{riga_excel}")
+                if "Metodo_Pagamento" in data:
+                    clienti_sheet.update(values=[[data["Metodo_Pagamento"]]], range_name=f"R{riga_excel}")
+                if "Invio_Bolletta" in data:
+                    clienti_sheet.update(values=[[data["Invio_Bolletta"]]], range_name=f"S{riga_excel}")
+                if "Scadenza_Offerta" in data:
+                    clienti_sheet.update(values=[[scadenza_offerta]], range_name=f"T{riga_excel}")
+                if "Esigibilità" in data:
+                    clienti_sheet.update(values=[[data["Esigibilità"]]], range_name=f"U{riga_excel}")  # ❗ verifica che sia colonna U
 
-                # Dopo aggiornamento dei campi
-                if stato_nuovo.strip().lower() == "da comparare" or stato_precedente == "da comparare":
+                # 🔁 Sincronizza file se cambia stato da/verso "da comparare"
+                stato_precedente = cliente.get("Stato", "").strip().lower()
+                if stato_nuovo == "da comparare" or stato_precedente == "da comparare":
+                    from requests import post
                     try:
-                        from requests import post
                         post(f"http://127.0.0.1:5000/sincronizza-da-comparare/{id_cliente}", json={"Stato": stato_nuovo})
                         print(f"🔁 Verifica sincronizzazione file comparazioni per cliente {id_cliente}")
                     except Exception as e:
                         print("⚠️ Errore nella sincronizzazione da comparare (admin):", e)
-
 
                 return jsonify({"message": "Cliente aggiornato correttamente (admin)"}), 200
 
@@ -389,6 +408,7 @@ def admin_modifica_cliente(id_cliente):
                 return jsonify({"error": str(e)}), 500
 
     return jsonify({"message": "Cliente non trovato"}), 404
+
 
 
 @app.route("/clienti/<id_cliente>", methods=["DELETE"])
@@ -1320,7 +1340,8 @@ def get_provvigioni():
                 "Settore": cliente.get("Settore"),
                 "Nuovo_Fornitore": cliente.get("Nuovo_Fornitore"),
                 "Provvigione": cliente.get("Provvigione"),
-                "Modificabile": cliente.get("Stato") != "Contratto ATTIVATO"
+                "Modificabile": cliente.get("Stato") != "Contratto ATTIVATO",
+                "Esigibilità": cliente.get("Esigibilità", "")
             }
             risultati.append(risultato)
 
@@ -1343,7 +1364,7 @@ def get_provvigioni_admin():
     if session.get("ruolo", "").strip().lower() != "admin":
         return jsonify({"message": "Non autorizzato"}), 401
 
-    clienti = clienti_sheet.get_all_records()
+    #clienti = clienti_sheet.get_all_records()
     clienti = clienti_sheet.get_all_records(value_render_option='UNFORMATTED_VALUE')
     risultati = []
 
@@ -1360,7 +1381,8 @@ def get_provvigioni_admin():
                 "Nuovo_Fornitore": cliente.get("Nuovo_Fornitore"),
                 "Provvigione": cliente.get("Provvigione"),
                 "Agente": cliente.get("Agente"),
-                "Modificabile": cliente.get("Stato") != "Contratto ATTIVATO"
+                "Modificabile": cliente.get("Stato") == "Contratto ATTIVATO",
+                "Esigibilità": cliente.get("Esigibilità", "")
             }
             risultati.append(risultato)
 
@@ -1381,14 +1403,300 @@ def aggiorna_provvigione_admin(id_cliente):
         if cliente["ID_Cliente"] == id_cliente:
             riga = idx + 2  # +2 = salta intestazione (base 1)
             try:
-                clienti_sheet.update(f"P{riga}", [[dati["Competenza"]]])  # colonna I: Competenza
-                clienti_sheet.update(f"I{riga}", [[dati["Provvigione"]]])  # colonna O: Provvigione
+                clienti_sheet.update(f"P{riga}", [[dati["Competenza"]]])  # colonna P: Competenza
+                clienti_sheet.update(f"I{riga}", [[dati["Provvigione"]]])  # colonna I: Provvigione
                 return jsonify({"message": "Dati aggiornati"}), 200
             except Exception as e:
                 print("❌ Errore aggiornamento:", e)
                 return jsonify({"error": str(e)}), 500
 
     return jsonify({"message": "Cliente non trovato"}), 404
+
+# LISTINO PROVVIGIONI
+@app.route("/listino-provvigioni")
+def listino_provvigioni():
+    try:
+        righe = listino_sheet.get_all_records()
+        return jsonify(righe)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()  # stampa errore nel terminale
+        return jsonify({"error": str(e)}), 500
+
+def formatta_valore_provvigione(val):
+    """Ritorna float se possibile, altrimenti la stringa pulita."""
+    try:
+        return float(str(val).replace(",", "."))
+    except Exception:
+        return val
+
+def competenza_str_to_data(val):
+    """
+    Converte '03/2024' o '3-2024' in stringa '01/03/2024' (per Google Sheets).
+    """
+    import re
+    from datetime import datetime
+    if isinstance(val, str):
+        m = re.match(r"(\d{1,2})[/-](\d{4})", val.strip())
+        if m:
+            mese = int(m.group(1))
+            anno = int(m.group(2))
+            return datetime(anno, mese, 1).strftime("%d/%m/%Y")
+    return val  # Se non è stringa o non matcha
+
+@app.route("/servizi-listino")
+def get_servizi_listino():
+    fornitore = request.args.get("fornitore")
+    partner = request.args.get("partner")
+    tipo = request.args.get("tipo")
+
+    foglio = client.open("CRM_Database").worksheet("Listino_Provvigioni")
+    righe = foglio.get_all_records()
+
+    servizi = [
+        r["Servizio_Prodotto"] for r in righe
+        if r["Nome_Fornitore"] == fornitore
+        and r["Nome_Partner"] == partner
+        and r["Tipo_Utenza"] == tipo
+        and r["Settore"].strip().lower() != "accessori"
+    ]
+
+    return jsonify(sorted(set(servizi)))
+
+
+@app.route("/accessori-listino")
+def get_accessori_listino():
+    fornitore = request.args.get("fornitore")
+    partner = request.args.get("partner")
+    tipo = request.args.get("tipo")
+
+    foglio = client.open("CRM_Database").worksheet("Listino_Provvigioni")
+    righe = foglio.get_all_records()
+
+    accessori = [
+        r["Servizio_Prodotto"] for r in righe
+        if r["Nome_Fornitore"] == fornitore
+        and r["Nome_Partner"] == partner
+        and r["Tipo_Utenza"] == tipo
+        and r["Settore"].strip().lower() == "accessori"
+    ]
+
+    return jsonify(sorted(set(accessori)))
+
+
+
+
+@app.route("/salva-provvigione", methods=["POST"])
+def salva_provvigione():
+    try:
+        data = request.json
+        sovrascrivi = data.get("sovrascrivi", False)
+        foglio = client.open("CRM_Database").worksheet("Provvigioni_Agenti")
+        righe = foglio.get_all_records()
+
+        id_cliente = str(data.get("ID_Cliente", "")).strip()
+        trovato = False
+
+        for idx, riga in enumerate(righe):
+            if str(riga.get("ID_Cliente", "")).strip() == id_cliente:
+                trovato = True
+                if not sovrascrivi:
+                    return jsonify({"error": "duplicato", "message": "Provvigione già presente"}), 400
+                else:
+                    # 💡 Formatta la provvigione come numero e la competenza come data
+                    provvigione_val = formatta_valore_provvigione(data.get("Provvigione", ""))
+
+                    competenza_val = competenza_str_to_data(data.get("Competenza", ""))
+
+                    # Sovrascrivi nella riga esistente (idx + 2 per saltare intestazione)
+                    foglio.update(
+                        range_name=f"A{idx+2}:O{idx+2}",
+                        values=[[
+                            data.get("ID_Cliente", ""),
+                            data.get("Nome", ""),
+                            data.get("Categoria", ""),
+                            data.get("Settore", ""),
+                            data.get("Metodo_Pagamento", ""),
+                            data.get("Invio_Bolletta", ""),
+                            data.get("Tipo_Utenza", ""),
+                            data.get("Nome_Fornitore", ""),
+                            data.get("Nome_Partner", ""),
+                            data.get("Servizio_Prodotto", ""),
+                            provvigione_val,
+                            competenza_str_to_data(data.get("Competenza", "")),
+                            data.get("Accessorio1", ""),
+                            data.get("Accessorio2", ""),
+                            data.get("Accessorio3", "")
+                        ]],
+                        value_input_option="USER_ENTERED"
+                    )
+
+                    return jsonify({"message": "Provvigione aggiornata correttamente"})
+
+        # Se non esiste: append
+        nuova_riga = [
+            data.get("ID_Cliente", ""),
+            data.get("Nome", ""),
+            data.get("Categoria", ""),
+            data.get("Settore", ""),
+            data.get("Metodo_Pagamento", ""),
+            data.get("Invio_Bolletta", ""),
+            data.get("Tipo_Utenza", ""),
+            data.get("Nome_Fornitore", ""),
+            data.get("Nome_Partner", ""),
+            data.get("Servizio_Prodotto", ""),
+            data.get("Provvigione", ""),
+            data.get("Competenza", ""),
+            data.get("Accessorio1", ""),
+            data.get("Accessorio2", ""),
+            data.get("Accessorio3", "")
+        ]
+
+        foglio.append_row(nuova_riga, value_input_option="USER_ENTERED")
+        return jsonify({"message": "Provvigione salvata correttamente"})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/provvigioni/<id_cliente>")
+def get_provvigioni_cliente(id_cliente):
+    try:
+        foglio = client.open("CRM_Database").worksheet("Provvigioni_Agenti")
+        righe = foglio.get_all_records()
+
+        record = next((r for r in righe if r["ID_Cliente"] == id_cliente), None)
+
+        return jsonify(record if record else {})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# ----------- SUDDIVISIONE QUOTE PROVVIGIONI ---------------
+
+def calcola_provvigioni_suddivise(id_agente, provvigione_lorda, client):
+    try:
+        foglio_agenti = client.open("CRM_Database").worksheet("Agenti")
+        foglio_listino = client.open("CRM_Database").worksheet("Tipo_Listino")
+
+        agenti = foglio_agenti.get_all_records()
+        listini = foglio_listino.get_all_records()
+
+        agente = next((a for a in agenti if a["Codice_Agente"] == id_agente), None)
+        if not agente:
+            raise ValueError(f"Agente {id_agente} non trovato")
+
+        id_listino = agente.get("Listino")
+        if not id_listino:
+            raise ValueError(f"Nessun Listino associato all'agente {id_agente}")
+
+        listino = next((l for l in listini if l["ID_Listino"] == id_listino), None)
+        if not listino:
+            raise ValueError(f"Listino {id_listino} non trovato")
+
+        def parse_percent(p): return float(str(p).replace("%", "").replace(",", ".") or 0) / 100
+
+        perc_agente = parse_percent(listino.get("Agente%", "0"))
+        perc_capo = parse_percent(listino.get("CapoArea%", "0"))
+        perc_mgr = parse_percent(listino.get("ManagerRegione%", "0"))
+        perc_azienda = parse_percent(listino.get("Azienda%", "0"))
+
+        prov = float(str(provvigione_lorda).replace(",", "."))
+
+        return {
+            "Provvigione": round(prov * perc_agente, 2),
+            "Provvigione_CapoArea": round(prov * perc_capo, 2),
+            "Provvigione_Manager": round(prov * perc_mgr, 2),
+            "Provvigione_Azienda": round(prov * perc_azienda, 2),
+        }
+
+        print("Listino trovato:", listino)
+        print("Valori:", perc_agente, perc_capo, perc_mgr, perc_azienda)
+        print("Agente trovato:", agente)
+        print("Chiavi disponibili:", list(agente.keys()))
+
+    except Exception as e:
+        print("❌ Errore calcolo provvigioni:", e)
+        return {
+            "Provvigione": 0,
+            "Provvigione_CapoArea": 0,
+            "Provvigione_Manager": 0,
+            "Provvigione_Azienda": 0,
+        }
+
+
+@app.route("/salva-quote-prov", methods=["POST"])
+def salva_quote_provvigioni():
+    try:
+        data = request.json
+        id_cliente = data.get("ID_Cliente")
+        provvigione_totale = data.get("Provvigione", "0")
+        competenza = data.get("Competenza", "")
+
+        if not id_cliente:
+            return jsonify({"error": "ID cliente mancante"}), 400
+
+        # 📄 Apri foglio Clienti
+        foglio = client.open("CRM_Database").worksheet("Clienti")
+        righe = foglio.get_all_records()
+        intestazioni = foglio.row_values(1)
+
+        # 🔍 Trova la riga del cliente
+        for idx, riga in enumerate(righe):
+            if riga["ID_Cliente"] == id_cliente:
+                riga_excel = idx + 2  # +2 perché get_all_records salta intestazione
+
+                id_agente = riga.get("Agente")
+                if not id_agente:
+                    return jsonify({"error": "ID agente mancante nel foglio Clienti"}), 400
+
+                # ➗ Calcola quote
+                quote = calcola_provvigioni_suddivise(id_agente, provvigione_totale, client)
+
+                # 🔁 Mappa intestazioni → valori da aggiornare
+                colonne = {
+                    "Provvigione": quote["Provvigione"],
+                    "Provvigione_CapoArea": quote["Provvigione_CapoArea"],
+                    "Provvigione_Manager": quote["Provvigione_Manager"],
+                    "Provvigione_Azienda": quote["Provvigione_Azienda"],
+                    "Competenza": competenza
+                }
+
+                for nome_col, valore in colonne.items():
+                    if nome_col in intestazioni:
+                        col_index = intestazioni.index(nome_col) + 1  # 1-based
+                        foglio.update_cell(riga_excel, col_index, valore)
+
+                return jsonify({"message": "Quote salvate correttamente"})
+
+        return jsonify({"error": "Cliente non trovato"}), 404
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+# ---------- TABELLA PROVVIGIONI PARTNER -------------
+
+@app.route("/provvigioni-partner")
+def pagina_provvigioni_partner():
+    return render_template("provvigioni_partner.html")
+
+
+@app.route("/api/provvigioni-partner")
+def api_provvigioni_partner():
+    try:
+        sheet = client.open("CRM_Database").worksheet("Provvigioni_Agenti")
+        records = sheet.get_all_records()
+
+        for r in records:
+            val = str(r.get("Provvigione", "")).replace("€", "").replace("\u20ac", "").strip()
+            r["Provvigione"] = val if val else "0,00"
+
+        return jsonify(records)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500  # ✅ chiusura corretta
+
 
 # -------------------------------------------------------------------
 #  H) GRAFICI

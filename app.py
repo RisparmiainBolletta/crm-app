@@ -269,7 +269,13 @@ def add_cliente():
         data_oggi,
         data.get("Metodo_Pagamento"),
         data.get("Invio_Bolletta"),
-        scadenza_offerta
+        scadenza_offerta,
+        "",
+        "",
+        "",
+        "",
+        data.get("IBAN"),
+        data.get("Tipo_richiesta")
     ]
     clienti_sheet.append_row(new_row)
     return jsonify({"message": f"Cliente aggiunto con ID {nuovo_id}"}), 201
@@ -319,6 +325,8 @@ def aggiorna_cliente(id_cliente):
             clienti_sheet.update(values=[[data["Metodo_Pagamento"]]], range_name=f"R{riga_excel}")
             clienti_sheet.update(values=[[data["Invio_Bolletta"]]], range_name=f"S{riga_excel}")
             clienti_sheet.update(values=[[scadenza_offerta]], range_name=f"T{riga_excel}")
+            clienti_sheet.update(values=[[data["IBAN"]]], range_name=f"Y{riga_excel}")
+            clienti_sheet.update(values=[[data["Tipo_richiesta"]]], range_name=f"Z{riga_excel}")
 
             if stato_precedente != stato_nuovo and ("da comparare" in [stato_precedente, stato_nuovo]):
                 from requests import post
@@ -389,7 +397,11 @@ def admin_modifica_cliente(id_cliente):
                 if "Scadenza_Offerta" in data:
                     clienti_sheet.update(values=[[scadenza_offerta]], range_name=f"T{riga_excel}")
                 if "Esigibilità" in data:
-                    clienti_sheet.update(values=[[data["Esigibilità"]]], range_name=f"U{riga_excel}")  # ❗ verifica che sia colonna U
+                    clienti_sheet.update(values=[[data["Esigibilità"]]], range_name=f"U{riga_excel}")
+                if "IBAN" in data:
+                    clienti_sheet.update(values=[[data["IBAN"]]], range_name=f"Y{riga_excel}")
+                if "Tipo_richiesta" in data:
+                    clienti_sheet.update(values=[[data["Tipo_richiesta"]]], range_name=f"Z{riga_excel}")
 
                 # 🔁 Sincronizza file se cambia stato da/verso "da comparare"
                 stato_precedente = cliente.get("Stato", "").strip().lower()
@@ -969,11 +981,27 @@ def approva_file(file_id):
 @app.route("/stati-cliente", methods=["GET"])
 def get_stati_cliente():
     try:
-        valori = impostazioni_sheet.col_values(3)
-        stati = [v for v in valori if v.lower() != "stato_cliente" and v.strip() != ""]
-        return jsonify(stati)
+        ruolo = session.get("ruolo", "agente").lower()  # default: agente
+        valori = impostazioni_sheet.get_all_records()
+
+        stati_filtrati = []
+
+        for riga in valori:
+            stato = riga.get("Stato_Cliente", "").strip()
+            visibile = riga.get("Ruolo", "").strip().lower()
+
+            if not stato:
+                continue
+
+            if visibile == "entrambi" or visibile == ruolo or visibile == "":
+                stati_filtrati.append(stato)
+
+        return jsonify(stati_filtrati)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
 
 @app.route("/tipi-interazione", methods=["GET"])
 def get_tipi_interazione():

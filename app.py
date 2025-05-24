@@ -194,8 +194,22 @@ def get_clienti_admin():
     if 'agente' not in session or session.get("ruolo") != "admin":
         return jsonify({"message": "Non autorizzato"}), 401
 
-    records = clienti_sheet.get_all_records()
-    return jsonify(records)  # ← Ordine inverso
+    clienti = clienti_sheet.get_all_records()
+    provvigioni = client.open("CRM_Database").worksheet("Provvigioni_Agenti").get_all_records()
+
+    # Mappa ID_Cliente → Nome_Fornitore
+    mappa_fornitori = {
+        p["ID_Cliente"]: p.get("Nome_Fornitore", "")
+        for p in provvigioni if p.get("ID_Cliente")
+    }
+
+    clienti_arricchiti = [
+        {**c, "Nome_Fornitore": mappa_fornitori.get(c.get("ID_Cliente", ""), "")}
+        for c in clienti
+    ][::-1]  # Ordine inverso
+
+    return jsonify(clienti_arricchiti)
+
 
 
 @app.route("/clienti", methods=["GET"])
@@ -203,10 +217,26 @@ def get_clienti():
     codice_agente = session.get('agente')
     if not codice_agente:
         return jsonify({"message": "Non autenticato"}), 401
-    records = clienti_sheet.get_all_records()
-    # Ogni agente vede solo i suoi
-    clienti_filtrati = [c for c in records if str(c.get("Agente")) == codice_agente][::-1]
+
+    # Recupera dati da entrambi i fogli
+    clienti_records = clienti_sheet.get_all_records()
+    provvigioni_records = client.open("CRM_Database").worksheet("Provvigioni_Agenti").get_all_records()
+
+    # Mappa: ID_Cliente → Nome_Fornitore
+    mappa_fornitori = {
+        p["ID_Cliente"]: p.get("Nome_Fornitore", "")
+        for p in provvigioni_records if p.get("ID_Cliente")
+    }
+
+    # Filtro i clienti dell'agente e arricchisco
+    clienti_filtrati = [
+        {**c, "Nome_Fornitore": mappa_fornitori.get(c.get("ID_Cliente", ""), "")}
+        for c in clienti_records
+        if str(c.get("Agente")) == codice_agente
+    ][::-1]  # Ordine inverso
+
     return jsonify(clienti_filtrati)
+    
 
 @app.route("/clienti", methods=["POST"])
 def add_cliente():
@@ -1351,22 +1381,27 @@ def get_provvigioni():
         return jsonify({"message": "Non autenticato"}), 401
 
     codice_agente = session['agente']
-    clienti = clienti_sheet.get_all_records()
-    clienti = clienti_sheet.get_all_records(value_render_option='UNFORMATTED_VALUE')
 
-    # Filtro solo i clienti dell'agente con provvigione valorizzata
+    clienti = clienti_sheet.get_all_records(value_render_option='UNFORMATTED_VALUE')
+    provvigioni = client.open("CRM_Database").worksheet("Provvigioni_Agenti").get_all_records()
+
+    # Mappa ID_Cliente → Nome_Fornitore
+    fornitori_map = {
+        p["ID_Cliente"]: p.get("Nome_Fornitore", "")
+        for p in provvigioni if p.get("ID_Cliente")
+    }
+
     risultati = []
     for cliente in clienti:
         if cliente.get("Agente") == codice_agente and cliente.get("Provvigione"):
             risultato = {
-                #"Competenza": datetime.today().strftime("%m/%Y"),
                 "Competenza": cliente.get("Competenza"),
                 "ID_Cliente": cliente.get("ID_Cliente"),
                 "Nome": cliente.get("Nome"),
                 "Categoria": cliente.get("Categoria"),
                 "Stato": cliente.get("Stato"),
                 "Settore": cliente.get("Settore"),
-                "Nuovo_Fornitore": cliente.get("Nuovo_Fornitore"),
+                "Nuovo_Fornitore": fornitori_map.get(cliente.get("ID_Cliente"), ""),
                 "Provvigione": cliente.get("Provvigione"),
                 "Modificabile": cliente.get("Stato") != "Contratto ATTIVATO",
                 "Esigibilità": cliente.get("Esigibilità", "")
@@ -1374,6 +1409,7 @@ def get_provvigioni():
             risultati.append(risultato)
 
     return jsonify(risultati)
+    
 
 @app.route("/pagina-provvigioni")
 def pagina_provvigioni():
@@ -1392,29 +1428,35 @@ def get_provvigioni_admin():
     if session.get("ruolo", "").strip().lower() != "admin":
         return jsonify({"message": "Non autorizzato"}), 401
 
-    #clienti = clienti_sheet.get_all_records()
     clienti = clienti_sheet.get_all_records(value_render_option='UNFORMATTED_VALUE')
-    risultati = []
+    provvigioni = client.open("CRM_Database").worksheet("Provvigioni_Agenti").get_all_records()
 
+    # Mappa ID_Cliente → Nome_Fornitore (ufficiale)
+    fornitori_map = {
+        p["ID_Cliente"]: p.get("Nome_Fornitore", "")
+        for p in provvigioni if p.get("ID_Cliente")
+    }
+
+    risultati = []
     for cliente in clienti:
-        #if cliente.get("Provvigione"):
-            risultato = {
-                #"Competenza": datetime.today().strftime("%m/%Y"),
-                "Competenza": cliente.get("Competenza"),
-                "ID_Cliente": cliente.get("ID_Cliente"),
-                "Nome": cliente.get("Nome"),
-                "Categoria": cliente.get("Categoria"),
-                "Stato": cliente.get("Stato"),
-                "Settore": cliente.get("Settore"),
-                "Nuovo_Fornitore": cliente.get("Nuovo_Fornitore"),
-                "Provvigione": cliente.get("Provvigione"),
-                "Agente": cliente.get("Agente"),
-                "Modificabile": cliente.get("Stato") == "Contratto ATTIVATO",
-                "Esigibilità": cliente.get("Esigibilità", "")
-            }
-            risultati.append(risultato)
+        risultato = {
+            "Competenza": cliente.get("Competenza"),
+            "ID_Cliente": cliente.get("ID_Cliente"),
+            "Nome": cliente.get("Nome"),
+            "Categoria": cliente.get("Categoria"),
+            "Stato": cliente.get("Stato"),
+            "Settore": cliente.get("Settore"),
+            # ✅ FORNITORE CORRETTO
+            "Nuovo_Fornitore": fornitori_map.get(cliente.get("ID_Cliente"), ""),
+            "Provvigione": cliente.get("Provvigione"),
+            "Agente": cliente.get("Agente"),
+            "Modificabile": cliente.get("Stato") == "Contratto ATTIVATO",
+            "Esigibilità": cliente.get("Esigibilità", "")
+        }
+        risultati.append(risultato)
 
     return jsonify(risultati)
+
 
 
 # Salva le modifiche apportate nella tabella Provvigioni
@@ -1559,7 +1601,38 @@ def salva_provvigione():
                         value_input_option="USER_ENTERED"
                     )
 
+                    # ✅ Aggiorna anche il foglio Clienti
+                    try:
+                        clienti_sheet = client.open("CRM_Database").worksheet("Clienti")
+                        clienti = clienti_sheet.get_all_records()
+                        intestazioni = clienti_sheet.row_values(1)
+                    
+                        for i, cliente in enumerate(clienti):
+                            if cliente["ID_Cliente"] == id_cliente:
+                                riga_excel = i + 2
+                                id_agente = cliente.get("Agente")
+                    
+                                if id_agente:
+                                    quote = calcola_provvigioni_suddivise(id_agente, provvigione_val, client)
+                    
+                                    colonne = {
+                                        "Provvigione": quote["Provvigione"],
+                                        "Provvigione_CapoArea": quote["Provvigione_CapoArea"],
+                                        "Provvigione_Manager": quote["Provvigione_Manager"],
+                                        "Provvigione_Azienda": quote["Provvigione_Azienda"],
+                                        "Competenza": data.get("Competenza", "")
+                                    }
+                    
+                                    for nome_col, valore in colonne.items():
+                                        if nome_col in intestazioni:
+                                            col_index = intestazioni.index(nome_col) + 1
+                                            clienti_sheet.update_cell(riga_excel, col_index, valore)
+                                break
+                    except Exception as e:
+                        print("⚠️ Errore aggiornamento Clienti durante sovrascrittura:", e)
+                    
                     return jsonify({"message": "Provvigione aggiornata correttamente"})
+
 
         # Se non esiste: append
         nuova_riga = [
@@ -1582,6 +1655,7 @@ def salva_provvigione():
 
         foglio.append_row(nuova_riga, value_input_option="USER_ENTERED")
         return jsonify({"message": "Provvigione salvata correttamente"})
+
     except Exception as e:
         import traceback
         traceback.print_exc()

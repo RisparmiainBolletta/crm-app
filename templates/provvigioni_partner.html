@@ -1,0 +1,54 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Provvigioni Partner{% endblock %}
+
+{% block content %}
+<h2 style="margin-top: 0.7rem;">💼 Provvigioni Partner</h2>
+
+
+
+<!-- Filtri orizzontali -->
+<div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
+    <label for="filtro-competenza"><strong>📅 Competenza:</strong></label>
+    <!-- Il select viene generato via JS -->
+
+    <input type="text" id="filtro-provvigioni-partner" placeholder="🔍 Cerca..." style="padding: 6px; min-width: 250px;">
+    <div style="margin-top: 0.7rem; margin-bottom: 0.2rem; font-weight: bold; ">
+        Totale Provvigioni: <span id="totale-provvigioni-partner">€ 0,00</span>
+    </div>
+    <p style="font-size: 0.7em;">Elenco provvigioni esigibili dai partner.</p>
+</div>
+
+
+<!-- Totale provvigioni -->
+
+
+<!-- Tabella riepilogo -->
+<table id="tabella-provvigioni-partner" class="display" style="width: 100%; margin-top: 1rem;">
+    <thead>
+        <tr id="thead-provvigioni-partner">
+            <th data-chiave="Competenza">Competenza</th>
+            <th data-chiave="ID_Cliente">ID Cliente</th>
+            <th data-chiave="Nome">Nome</th>
+            <th data-chiave="Settore">Settore</th>
+            <th data-chiave="Tipo_Utenza">Tipo Utenza</th>
+            <th data-chiave="Nome_Fornitore">Fornitore</th>
+            <th data-chiave="Nome_Partner">Partner</th>
+            <th data-chiave="Servizio_Prodotto">Servizio/Prodotto</th>
+            <th data-chiave="Accessorio1">Accessorio 1</th>
+            <th data-chiave="Accessorio2">Accessorio 2</th>
+            <th data-chiave="Accessorio3">Accessorio 3</th>
+            <th data-chiave="Provvigione">Provvigione</th>
+        </tr>
+    </thead>
+    <tbody id="tbody-provvigioni-partner">
+        <!-- Dati caricati dinamicamente -->
+    </tbody>
+</table>
+
+<!-- Includi DataTables e script JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script type="module" src="{{ url_for('static', filename='js/provvigioni_partner.js') }}"></script>
+{% endblock %}

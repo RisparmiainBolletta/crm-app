@@ -206,9 +206,9 @@ def get_clienti_admin():
     clienti_arricchiti = [
         {**c, "Nome_Fornitore": mappa_fornitori.get(c.get("ID_Cliente", ""), "")}
         for c in clienti
-    ][::-1]  # Ordine inverso
+    ]
 
-    return jsonify(clienti_arricchiti)
+    return jsonify(clienti_arricchiti)  # ← Ordine inverso"
 
 
 
